@@ -1,0 +1,107 @@
+body {
+    width: 90%;
+    margin: 0px auto;
+    padding: 2em;
+    box-sizing: border-box;
+    background: #f2e7d9;
+    font-family: "Varela Round", sans-serif;
+    color: #633645;
+    line-height: 1.3;
+  }
+
+  body>div {
+    padding: 2em;
+    background: rgba(255, 255, 255, 0.7);
+    border: 10px solid white;
+  }
+
+  h2,
+  p,
+  ul {
+    padding-bottom: 1em;
+  }
+
+  h2 {
+    text-align: center;
+    font-size: 2em;
+  }
+
+  p {
+    font-size: 1.2em;
+  }
+
+  table {
+    border-collapse: collapse;
+  }
+
+  td, th {
+      border: 1px solid black;
+      padding: 3px;
+  }
+
+  nonselected {
+    background-color: white;
+  }
+
+  selected {
+    background-color: green;
+  }
+
+  #notes-display {
+    position: relative;
+    overflow: hidden;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid rgba(133, 71, 122, 0.7);
+  }
+
+  #flutes {
+    position: relative;
+    overflow: hidden;
+    height: 520px;
+    font-size: 1.0em;
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid rgba(133, 71, 122, 0.7);
+  }
+
+  #midi-data {
+    position: relative;
+    overflow: hidden;
+    height: 100px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid rgba(133, 71, 122, 0.7);
+  }
+
+  #midi-data ul {
+    position: absolute;
+    left: 0px;
+    bottom: 0px;
+    padding: 1em;
+  }
+
+  #midi-data ul li {
+    padding: 0.2em 0.2em 0.2em 1em;
+    font-size: 1.0em;
+    font-family: monospace;
+  }
+
+  #midi-data ul li:last-child {
+    font-weight: bold;
+    color: #85477a;
+    animation: flash 0.5s;
+  }
+
+  #midi-data ul li:last-child:before {
+    content: "> ";
+    margin-left: -1em;
+  }
+
+  @keyframes flash {
+    0% {
+      color: #c9b21d;
+    }
+
+    100% {
+      color: #85477a;
+    }
+  }

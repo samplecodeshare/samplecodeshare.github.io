@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" type="image/png"
+    href="https://cpwebassets.codepen.io/assets/favicon/apple-touch-icon-5ae1a0698dcc2402e9712f7d01ed509a57814f994c660df9f7a952f3060705ee.png" />
+  <meta name="apple-mobile-web-app-title" content="CodePen">
+
+  <link rel="shortcut icon" type="image/x-icon"
+    href="https://cpwebassets.codepen.io/assets/favicon/favicon-aec34940fbc1a6e787974dcd360f2c6b63348d4b1f4e06c77743096d55480f33.ico" />
+
+  <link rel="mask-icon" type="image/x-icon"
+    href="https://cpwebassets.codepen.io/assets/favicon/logo-pin-8f3771b1072e3c38bd662872f6b673a722f4b3ca2421637d5596661b4e2132cc.svg"
+    color="#111" />
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css">
+
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Varela+Round'>
+
+  <style>
+    body {
+      width: 90%;
+      margin: 0px auto;
+      padding: 2em;
+      box-sizing: border-box;
+      background: #f2e7d9;
+      font-family: "Varela Round", sans-serif;
+      color: #633645;
+      line-height: 1.3;
+    }
+
+    body>div {
+      padding: 2em;
+      background: rgba(255, 255, 255, 0.7);
+      border: 10px solid white;
+    }
+
+    h2,
+    p,
+    ul {
+      padding-bottom: 1em;
+    }
+
+    h2 {
+      text-align: center;
+      font-size: 2em;
+    }
+
+    p {
+      font-size: 1.2em;
+    }
+
+    table {
+      border-collapse: collapse;
+    }
+
+    td, th {
+        border: 1px solid black;
+        padding: 3px;
+    }
+
+    nonselected {
+      background-color: white;
+    }
+
+    selected {
+      background-color: green;
+    }
+
+    #notes-display {
+      position: relative;
+      overflow: hidden;
+      height: 20px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 2px solid rgba(133, 71, 122, 0.7);
+    }
+
+    #flutes {
+      position: relative;
+      overflow: hidden;
+      height: 520px;
+      font-size: 1.0em;
+      background: rgba(255, 255, 255, 0.9);
+      border: 2px solid rgba(133, 71, 122, 0.7);
+    }
+
+    #midi-data {
+      position: relative;
+      overflow: hidden;
+      height: 100px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 2px solid rgba(133, 71, 122, 0.7);
+    }
+
+    #midi-data ul {
+      position: absolute;
+      left: 0px;
+      bottom: 0px;
+      padding: 1em;
+    }
+
+    #midi-data ul li {
+      padding: 0.2em 0.2em 0.2em 1em;
+      font-size: 1.0em;
+      font-family: monospace;
+    }
+
+    #midi-data ul li:last-child {
+      font-weight: bold;
+      color: #85477a;
+      animation: flash 0.5s;
+    }
+
+    #midi-data ul li:last-child:before {
+      content: "> ";
+      margin-left: -1em;
+    }
+
+    @keyframes flash {
+      0% {
+        color: #c9b21d;
+      }
+
+      100% {
+        color: #85477a;
+      }
+    }
+  </style>
+
+  <script>
+    window.console = window.console || function (t) { };
+  </script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prefixfree/1.0.7/prefixfree.min.js"></script>
+
+  <script>
+    if (document.location.search.match(/type=embed/gi)) {
+      window.parent.postMessage("resize", "*");
+    }
+  </script>
+</head>
+
+<body translate="no">
+  <div>
+    <section id="notes-display">
+      <ul></ul>
+    </section>
+    <section id="flutes">
+        <ul></ul>
+    </section>  
+    <section id="midi-data">
+        <ul></ul>
+      </section>  
+  </div>
+  <script
+    src="https://cpwebassets.codepen.io/assets/common/stopExecutionOnTimeout-2c7831bb44f98c1391d6a4ffda0e1fd302503391ca806e7fcc7b9b87197aec26.js"></script>
+
+  <script id="rendered-js">
+    var CHROMATIC =   [ 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B' ];
+    var header =      [ "Scale","ma","pa","dha","ni","sa","re","ga","ma","pa","dha","ni","sa","re","ga","ma","pa","dha","Count"];
+    var mid_csharp =  ["2F#","2G#","2A#","2C","3C#","3D#","3F","3F#","3G#","3A#","3C","4C#","4D#","4F","4F#","4G#","4A#"];
+    var mid_D =       ["2G","2A","2B","2C#","3D","3E","3F#","3G","3A","3B","3C#","4D","4E","4F#","4G","4A","4B"];
+    var mid_Dsharp =  ["2G#","2A#","2C","2D","3D#","3F","3G","3G#","3A#","3C","3D","4D#","4F","4G","4G#","4A#","4C"];
+    var mid_E =       ["2A","2B","2C#","2D#","3E","3F#","3G#","3A","3B","3C#","3D#","4E","4F#","4G#","4A","4B","4C#"];
+    var mid_F =       ["2A#","2C","2D","2E","3F","3G","3A","3A#","3C","3D","3E","4F","4G","4A","4A#","4C","4D"];
+    var mid_Fsharp =  ["2B","2C#","2D#","2F","3F#","3G#","3A#","3B","3C#","3D#","3F","4F#","4G#","4A#","4B","4C#","4D#"];
+    var mid_G =       ["2C","2D","2E","2F#","3G","3A","3B","3C","3D","3E","3F#","4G","4A","4B","4C","4D","4E"];
+    var mid_Gsharp =  ["2C#","2D#","2F","2G","3G#","3A#","3C","3C#","3D#","3F","3G","4G#","4A#","4C","4C#","4D#","4F"];
+    var mid_A =       ["2D","2E","2F#","2G#","3A","3B","3C#","3D","3E","3F#","3G#","4A","4B","4C#","4D","4E","4F#"];
+    var mid_Asharp =  ["2D#","2F","2G","2A","3A#","3C","3D","3D#","3F","3G","3A","4A#","4C","4D","4D#","4F","4G"];
+    var mid_B =       ["2E","2F#","2G#","2A#","3B","3C#","3D#","3E","3F#","3G#","3A#","4B","4C#","4D#","4E","4F#","4G#"];
+    var mid_C =       ["2F","2G","2A","2B","3C","3D","3E","3F","3G","3A","3B","4C","4D","4E","4F","4G","4A"];
+    var base_Csharp = ["2F#","3G#","3A#","3C","4C#","4D#","4F","4F#","4G#","4A#","4C","5C#","5D#","5F","5F#","5G#","5A#"];
+    var base_D =      ["3G","3A","3B","3C#","4D","4E","4F#","4G","4A","4B","4C#","5D","5E","5F#","5G","5A","5B"];
+    var base_Dsharp = ["3G#","3A#","3C","3D","4D#","4F","4G","4G#","4A#","4C","4D","5D#","5F","5G","5G#","5A#","5C"];
+    var base_E =      ["3A","3B","3C#","3D#","4E","4F#","4G#","4A","4B","4C#","4D#","5E","5F#","5G#","5A","5B","5C#"];
+    var base_F =      ["3A#","3C","3D","3E","4F","4G","4A","4A#","4C","4D","4E","5F","5G","5A","5A#","5C","5D"];
+    var base_Fsharp = ["3B","3C#","3D#","3F","4F#","4G#","4A#","4B","4C#","4D#","4F","5F#","5G#","5A#","5B","5C#","5D#"];
+    var base_G =      ["3C","3D","3E","3F#","4G","4A","4B","4C","4D","4E","4F#","5G","5A","5B","5C","5D","5E"];
+    var base_Gsharp = ["3C#","3D#","3F","3G","4G#","4A#","4C","4C#","4D#","4F","4G","5G#","5A#","5C","5C#","5D#","5F"];
+    var base_A =      ["3D","3E","3F#","3G#","4A","4B","4C#","4D","4E","4F#","4G#","5A","5B","5C#","5D","5E","5F#"];
+    var base_Asharp = ["3D#","3F","3G","3A","4A#","4C","4D","4D#","4F","4G","4A","5A#","5C","5D","5D#","5F","5G"];
+    var base_B =      ["3E","3F#","3G#","3A#","4B","4C#","4D#","4E","4F#","4G#","4A#","5B","5C#","5D#","5E","5F#","5G#"];
+    var base_C =      ["3F","3G","3A","3B","4C","4D","4E","4F","4G","4A","4B","5C","5D","5E","5F","5G","5A"];
+
+    // var flutes = [];
+    var flutes = [mid_csharp,
+                  mid_D ,
+                  mid_Dsharp ,
+                  mid_E ,
+                  mid_F ,
+                  mid_Fsharp ,
+                  mid_G ,
+                  mid_Gsharp ,
+                  mid_A ,
+                  mid_Asharp ,
+                  mid_B ,
+                  mid_C ,
+                  base_Csharp,
+                  base_D ,
+                  base_Dsharp ,
+                  base_E ,
+                  base_Fsharp ,
+                  base_G ,
+                  base_Gsharp ,
+                  base_A ,
+                  base_Asharp ,
+                  base_B ,
+                  base_C
+                  ];
+    var midi, data;
+    // start talking to MIDI controller
+    if (navigator.requestMIDIAccess) {
+      navigator.requestMIDIAccess({
+        sysex: false
+      }).
+        then(onMIDISuccess, onMIDIFailure);
+    } else {
+      console.warn("No MIDI support in your browser");
+    }
+
+    // on success
+    function onMIDISuccess(midiData) {
+      // this is all our MIDI data
+      midi = midiData;
+      var allInputs = midi.inputs.values();
+      // loop over all available inputs and listen for any MIDI input
+      for (var input = allInputs.next(); input && !input.done; input = allInputs.next()) {
+        if (window.CP.shouldStopExecution(0)) break;
+        // when a MIDI value is received call the onMIDIMessage function
+        input.value.onmidimessage = gotMIDImessage;
+      } window.CP.exitedLoop(0);
+    }
+    var dataList = document.querySelector('#midi-data ul');
+    let notesArr = [];
+    
+    function gotMIDImessage(messageData) {
+      var newItem = document.createElement('li');
+      if (messageData.data[0] == 144) {        
+        var note = getNote(messageData.data[1]);
+        if (note == "-1C"){
+          document.getElementById("flutes").innerHTML = "";
+          document.getElementById("notes-display").innerHTML = ""
+          notesArr = [];
+        }else{
+          newItem.appendChild(document.createTextNode(messageData.data + "<" + note + ">"));
+          if(!notesArr.includes(note)){
+            notesArr.push(note);
+            findFlute(notesArr);
+          }
+          dataList.appendChild(newItem);
+          document.getElementById("notes-display").innerHTML = notesArr.sort();        
+        }
+      }
+    }
+
+    // on failure
+    function onMIDIFailure() {
+      console.warn("Not recognising MIDI controller");
+    }
+
+    function getNote(midi){
+      if (isNaN(midi) || midi < 0 || midi > 127) return null
+      var name = CHROMATIC[midi % 12]
+      var oct = Math.floor(midi / 12) - 1
+      return oct + name
+    }
+
+    function getHeader(){
+      var headerRow = "<tr>"
+      for(let k = 0; k < header.length; k++) {
+        headerRow += "<td>" + header[k] + "</td>";
+      }
+      headerRow += "</tr>"
+      return headerRow
+    }
+
+    var flutelist = document.querySelector('#flutes ul');
+
+    function findNoteAllOctaves(currentNote,scaleNotes){      
+      var tdNote = ""
+      if (!scaleNotes.includes(currentNote)){        
+        var nfBgColor = "white";
+        for(let k = 0; k < scaleNotes.length; k++) {        
+          if(scaleNotes[k].substring(1) == currentNote.substring(1)){
+            nfBgColor = "#90EE90"
+            break;
+          }
+        }
+        tdNote = "<td bgColor='" + nfBgColor + "'>" +  currentNote + "</td>";
+      }
+      return tdNote;
+    }
+
+    function findFlute(currentNotes) { 
+     currentNotes.sort();
+     flutelist.innerHTML ="";
+     var byCount = [];
+     var mytable = "<table>"; 
+     mytable += getHeader();     
+     for(let i = 0; i < flutes.length; i++) {
+        // var newItem = document.createElement('li');
+        var flute = flutes[i];
+        var count = 0;
+        var rowStr = "<tr>";
+        rowStr += "<td bgcolor='yellow'>" + flute[4] + "</td>"
+        var notFound = "<td bgcolor='red'> NF </td>"
+        for(let j = 0; j < flute.length; j++) {
+            var bgcolor = "white";
+            for(let k = 0; k < currentNotes.length; k++) {
+                if (currentNotes[k] == flute[j]){
+                    count = count + 1;
+                    bgcolor = "green"
+                }
+            }
+            rowStr += "<td bgcolor='"+ bgcolor  + "'>" + flute[j] + "</td>"
+        }
+        for(let k = 0; k < currentNotes.length; k++) {
+            // if (!flute.includes(currentNotes[k])){
+            //   notFound += "<td>" + currentNotes[k] +"</td>"
+            // }
+            var nfTdStr = findNoteAllOctaves(currentNotes[k],flute)
+            if(nfTdStr){
+              notFound += nfTdStr;
+            }
+        }
+
+        rowStr += "<td bgcolor='yellow'>" + count + "</td>"
+        rowStr += notFound;
+        rowStr += "</tr>";
+        countArry = [count, rowStr]
+        byCount.push(countArry)
+        // newItem.appendChild(document.createTextNode(flutes[i] + "[" + count + "]"));
+        // flutelist.appendChild(newItem);        
+     }   
+     var sortedData = byCount.sort((a, b) => b[0] - a[0])
+     for(let k = 0; k < sortedData.length; k++) {
+       var data = sortedData[k];
+       mytable += data[1] ;
+     }        
+     mytable += "</table>";
+     document.getElementById("flutes").innerHTML = mytable;
+    }
+
+//# sourceURL=pen.js
+  </script>
+
+</body>
+
+</html>
