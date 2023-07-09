@@ -16,21 +16,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-// <dependencies>
-//     <!-- Apache Avro -->
-//     <dependency>
-//         <groupId>org.apache.avro</groupId>
-//         <artifactId>avro</artifactId>
-//         <version>1.10.2</version>
-//     </dependency>
-
-//     <!-- Apache Commons IO -->
-//     <dependency>
-//         <groupId>commons-io</groupId>
-//         <artifactId>commons-io</artifactId>
-//         <version>2.11.0</version>
-//     </dependency>
-// </dependencies>
 
 public class AvroToJsonConverter {
 
