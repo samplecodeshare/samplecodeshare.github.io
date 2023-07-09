@@ -1,36 +1,14 @@
 import org.apache.avro.Schema;
-import org.apache.avro.file.DataFileReader;
-import org.apache.avro.file.SeekableByteArrayInput;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.Decoder;
-import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.JsonEncoder;
-import org.apache.avro.io.ParsingEncoder;
-import org.apache.avro.io.ResolvingDecoder;
-import org.apache.avro.io.ValidatingDecoder;
-import org.apache.commons.io.IOUtils;
+import org.apache.avro.io.*;
+import org.apache.avro.specific.SpecificDatumReader;
+import org.apache.avro.specific.SpecificDatumWriter;
 
-import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-
-// <dependencies>
-//     <!-- Apache Avro -->
-//     <dependency>
-//         <groupId>org.apache.avro</groupId>
-//         <artifactId>avro</artifactId>
-//         <version>1.10.2</version>
-//     </dependency>
-
-//     <!-- Apache Commons IO -->
-//     <dependency>
-//         <groupId>commons-io</groupId>
-//         <artifactId>commons-io</artifactId>
-//         <version>2.11.0</version>
-//     </dependency>
-// </dependencies>
 
 public class AvroToJsonConverter {
 
@@ -66,31 +44,23 @@ public class AvroToJsonConverter {
     }
 
     private static String convertAvroToJson(byte[] avroData, String avroSchema) throws IOException {
-        ByteArrayInputStream inputStream = new ByteArrayInputStream(avroData);
-        SeekableByteArrayInput seekableInput = new SeekableByteArrayInput(inputStream);
-
+        // Create Avro schema
         Schema schema = new Schema.Parser().parse(avroSchema);
 
-        DatumReader<GenericRecord> datumReader = new GenericDatumReader<>(schema);
-        Decoder decoder = DecoderFactory.get().binaryDecoder(seekableInput, null);
+        // Create Avro reader and decoder
+        DatumReader<GenericRecord> reader = new GenericDatumReader<>(schema);
+        Decoder decoder = DecoderFactory.get().binaryDecoder(avroData, null);
 
-        GenericRecord avroRecord = datumReader.read(null, createDecoderWithValidation(decoder, schema));
-        ParsingEncoder jsonEncoder = EncoderFactory.get().jsonEncoder(schema, System.out);
+        // Read Avro record from the binary data
+        GenericRecord avroRecord = reader.read(null, decoder);
 
-        JsonEncoder encoder = EncoderFactory.get().validatingEncoder(schema, jsonEncoder);
+        // Convert Avro record to JSON
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        JsonEncoder encoder = EncoderFactory.get().jsonEncoder(schema, outputStream);
+        DatumWriter<GenericRecord> writer = new GenericDatumWriter<>(schema);
+        writer.write(avroRecord, encoder);
+        encoder.flush();
 
-        encoder.configure(jsonEncoder);
-        encoder.write(avroRecord);
-
-        jsonEncoder.flush();
-
-        return IOUtils.toString(System.out, StandardCharsets.UTF_8);
-    }
-
-    private static ResolvingDecoder createDecoderWithValidation(Decoder decoder, Schema writerSchema) {
-        ValidatingDecoder.ValidatingEncoder validatingEncoder = new ValidatingDecoder.ValidatingEncoder(writerSchema);
-        validatingEncoder.configure(decoder);
-
-        return validatingEncoder;
+        return outputStream.toString();
     }
 }
