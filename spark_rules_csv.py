@@ -1,3 +1,7 @@
+# condition_1,condition_2,priority,action
+# age > 25,salary > 50000,1,approve
+# age <= 25,salary <= 50000,2,reject
+
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
 from py4j.java_gateway import java_import
