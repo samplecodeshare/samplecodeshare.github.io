@@ -1,0 +1,51 @@
+<project>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.example</groupId>
+    <artifactId>your-drools-project</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <dependencies>
+        <!-- Add Drools dependencies here -->
+        <dependency>
+            <groupId>org.drools</groupId>
+            <artifactId>drools-core</artifactId>
+            <version>your-drools-version</version>
+        </dependency>
+        <!-- Add other dependencies as needed -->
+
+        <!-- Spark dependencies if used -->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_2.12</artifactId>
+            <version>your-spark-version</version>
+        </dependency>
+        <!-- Add other Spark dependencies as needed -->
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Maven Shade Plugin configuration -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>your.main.Class</mainClass>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
