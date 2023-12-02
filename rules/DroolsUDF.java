@@ -5,6 +5,11 @@ import org.kie.api.KieServices;
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
 
+// // Register the UDF
+// spark.udf().register("applyDroolsRules", new DroolsUDF(), DataTypes.createStructType(Arrays.asList(DataTypes.createStructField("your", "output", "schema"))));
+// // Apply the UDF to the DataFrame
+// DataFrame transformedDataFrame = dataFrame.withColumn("outputColumn", callUDF("applyDroolsRules", dataFrame.col("inputColumn")));
+
 public class DroolsUDF implements UDF1<Row, Row> {
     @Override
     public Row call(Row row) throws Exception {
