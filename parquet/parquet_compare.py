@@ -1,4 +1,26 @@
 import pyarrow.parquet as pq
+import pandas as pd
+
+def extract_parquet_schema(parquet_file):
+    # Read Parquet file into a pyarrow Table
+    table = pq.read_table(parquet_file)
+
+    # Extract column names and data types
+    schema = table.schema
+    schema_dict = {}
+
+    for field in schema:
+        column_name = field.name
+        data_type = field.type.to_pandas_dtype()
+        schema_dict[column_name] = data_type
+
+    return schema_dict
+
+# Example usage
+parquet_file = "example.parquet"
+schema_dict = extract_parquet_schema(parquet_file)
+print(schema_dict)
+
 
 def convert_parquet_to_csv(parquet_file, csv_file):
     # Read Parquet file into a DataFrame
