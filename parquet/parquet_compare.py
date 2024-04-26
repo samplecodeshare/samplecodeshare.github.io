@@ -1,5 +1,12 @@
 import pyarrow.parquet as pq
 
+def convert_parquet_to_csv(parquet_file, csv_file):
+    # Read Parquet file into a DataFrame
+    df = pd.read_parquet(parquet_file)
+
+    # Write DataFrame to CSV
+    df.to_csv(csv_file, index=False)
+
 def compare_parquet_files(file1, file2):
     # Read Parquet files into pyarrow Tables
     table1 = pq.read_table(file1)
@@ -37,3 +44,8 @@ def compare_parquet_files(file1, file2):
 file1 = "file1.parquet"
 file2 = "file2.parquet"
 compare_parquet_files(file1, file2)
+
+# Example usage
+parquet_file = "input.parquet"
+csv_file = "output.csv"
+convert_parquet_to_csv(parquet_file, csv_file)
