@@ -90,4 +90,27 @@ public class CSVReader {
 
         return processedDataList;
     }
+
+    public static void writeDataToCSV(List<Map<String, String>> dataList, String outputFile) {
+        try (FileWriter writer = new FileWriter(outputFile)) {
+            // Write headers
+            Map<String, String> firstRow = dataList.get(0);
+            for (String key : firstRow.keySet()) {
+                writer.append(key);
+                writer.append(",");
+            }
+            writer.append("\n");
+
+            // Write data
+            for (Map<String, String> row : dataList) {
+                for (String value : row.values()) {
+                    writer.append(value);
+                    writer.append(",");
+                }
+                writer.append("\n");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
