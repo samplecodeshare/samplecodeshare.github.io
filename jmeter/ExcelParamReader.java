@@ -55,6 +55,43 @@ public class ExcelReader {
         return dataMap;
     }
 
+    public static List<Map<String, String>> readExcel_1(String excelFile) {
+        List<Map<String, String>> dataList = new ArrayList<>();
+
+        try (FileInputStream fis = new FileInputStream(excelFile);
+             Workbook workbook = WorkbookFactory.create(fis)) {
+
+            // Assuming the data is in the first sheet
+            Sheet sheet = workbook.getSheetAt(0);
+
+            // Read headers
+            Row headerRow = sheet.getRow(0);
+            int columnCount = headerRow.getLastCellNum();
+            String[] headers = new String[columnCount];
+            for (int i = 0; i < columnCount; i++) {
+                Cell headerCell = headerRow.getCell(i);
+                headers[i] = headerCell.getStringCellValue();
+            }
+
+            // Read data
+            int rowCount = sheet.getLastRowNum();
+            for (int i = 1; i <= rowCount; i++) {
+                Row row = sheet.getRow(i);
+                Map<String, String> rowData = new HashMap<>();
+                for (int j = 0; j < columnCount; j++) {
+                    Cell cell = row.getCell(j, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+                    String cellValue = formatCellValue(cell);
+                    rowData.put(headers[j], cellValue);
+                }
+                dataList.add(rowData);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return dataList;
+    }
+
     private static String formatCellValue(Cell cell) {
         switch (cell.getCellType()) {
             case STRING:
