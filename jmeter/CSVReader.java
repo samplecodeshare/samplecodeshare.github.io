@@ -58,4 +58,36 @@ public class CSVReader {
         }
         return inputString;
     }
+
+    public static List<Map<String, String>> processDataWithParams(Map<String, String> data, List<Map<String, String>> paramsList) {
+        List<Map<String, String>> processedDataList = new ArrayList<>();
+
+        for (Map<String, String> params : paramsList) {
+            Map<String, String> processedData = new HashMap<>(data); // Copy original data
+            for (Map.Entry<String, String> paramEntry : params.entrySet()) {
+                String paramName = paramEntry.getKey();
+                String paramValue = paramEntry.getValue();
+                processedData.put(paramName, paramValue); // Replace or add parameter value
+            }
+            processedDataList.add(processedData);
+        }
+
+        return processedDataList;
+    }
+
+    public static List<Map<String, String>> processDataWithParams(Map<String, String> data, List<Map<String, String>> paramsList) {
+        List<Map<String, String>> processedDataList = new ArrayList<>();
+
+        for (Map<String, String> params : paramsList) {
+            Map<String, String> processedData = new HashMap<>(data); // Copy original data
+            for (Map.Entry<String, String> paramEntry : params.entrySet()) {
+                String paramName = paramEntry.getKey();
+                String paramValue = paramEntry.getValue();
+                processedData.put(paramName, paramValue); // Replace or add parameter value
+            }
+            processedDataList.add(processedData);
+        }
+
+        return processedDataList;
+    }
 }
