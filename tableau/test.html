@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau Click Event</title>
+    <!-- Load Tableau JavaScript API -->
+    <script src="https://www.tableau.com/javascripts/api/tableau-2.min.js"></script>
+</head>
+<body>
+    <!-- Container for Tableau Viz -->
+    <div id="vizContainer" style="width:800px; height:600px;"></div>
+
+    <script>
+        // Initialize Tableau Viz
+        var vizUrl = "YOUR_TABLEAU_VIZ_URL";
+        var vizContainer = document.getElementById("vizContainer");
+        var options = {
+            hideTabs: true,
+            hideToolbar: true,
+            onFirstInteractive: function () {
+                // Add Event Listener for Marks Selection
+                viz.addEventListener(tableau.TableauEventName.MARKS_SELECTION, onMarksSelection);
+            }
+        };
+        var viz = new tableau.Viz(vizContainer, vizUrl, options);
+
+        // Event Listener for Marks Selection
+        function onMarksSelection(event) {
+            // Retrieve Selected Marks
+            viz.getWorkbook().getActiveSheet().getSelectedMarksAsync().then(function (marks) {
+                // Process selected marks
+                var data = marks.map(function (mark) {
+                    return mark.getData();
+                });
+                console.log("Selected Marks:", data);
+                // Send data to JavaScript Interop object
+                sendToInterop(data);
+            });
+        }
+
+        // Method to send data to JavaScript Interop object
+        function sendToInterop(data) {
+            // Check if Interop object is available
+            if (typeof window.myInteropObject !== 'undefined') {
+                // Call method on Interop object
+                window.myInteropObject.receiveData(data);
+                console.log("Data sent to JavaScript Interop object successfully");
+            } else {
+                console.error("JavaScript Interop object not found");
+            }
+        }
+
+        // Method to receive data from JavaScript Interop object
+        function receiveFromInterop(receivedData) {
+            console.log("Data received from Interop:", receivedData);
+            // TODO: Process received data as needed
+        }
+    </script>
+</body>
+</html>
