@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Popup Example</title>
+    <style>
+        /* Styling for the popup */
+        .popup {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            display: none; /* Initially hidden */
+        }
+    </style>
+</head>
+<body>
+
+<!-- Popup content -->
+<div class="popup" id="popup">
+    <span id="popupText">This is a popup!</span>
+    <button onclick="closePopup()">Close</button>
+</div>
+
+<!-- Button to trigger the popup -->
+<button onclick="showPopupWithText('Hello, world!')">Show Popup with Text</button>
+
+<script>
+    // Function to show the popup with custom text
+    function showPopupWithText(text) {
+        var popup = document.getElementById("popup");
+        var popupText = document.getElementById("popupText");
+        popupText.innerText = text; // Set the text content
+        popup.style.display = "block";
+        
+        // Close the popup after 3 seconds (3000 milliseconds)
+        setTimeout(closePopup, 3000);
+    }
+
+    // Function to close the popup
+    function closePopup() {
+        var popup = document.getElementById("popup");
+        popup.style.display = "none";
+    }
+</script>
+
+</body>
+</html>
