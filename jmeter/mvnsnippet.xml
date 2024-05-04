@@ -1,0 +1,48 @@
+<project>
+    <!-- Other configurations -->
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+                    <execution>
+                        <id>create-zip</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
+                            <archive>
+                                <manifest>
+                                    <mainClass>YourMainClass</mainClass>
+                                </manifest>
+                            </archive>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <finalName>your-artifact-name</finalName>
+                            <outputDirectory>${project.build.directory}/zip</outputDirectory>
+                            <formats>
+                                <format>zip</format>
+                            </formats>
+                            <fileSets>
+                                <fileSet>
+                                    <directory>${project.basedir}/src/main/resources</directory>
+                                    <outputDirectory>/</outputDirectory>
+                                    <includes>
+                                        <include>**/*.properties</include> <!-- Adjust as per your file types -->
+                                        <!-- Add more <include> elements as needed -->
+                                    </includes>
+                                </fileSet>
+                            </fileSets>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
