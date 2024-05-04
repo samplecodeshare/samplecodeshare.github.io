@@ -3,10 +3,58 @@
 
     <build>
         <plugins>
+            <!-- Maven Dependency Plugin to copy dependencies to a directory -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.1.2</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/dependency-jars</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Maven Assembly Plugin to package dependency JARs and additional files into a ZIP -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>3.3.0</version>
+                <configuration>
+                    <appendAssemblyId>false</appendAssemblyId>
+                    <finalName>your-artifact-name</finalName>
+                    <outputDirectory>${project.build.directory}/zip</outputDirectory>
+                    <formats>
+                        <format>zip</format>
+                    </formats>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <fileSets>
+                        <fileSet>
+                            <directory>${project.build.directory}/dependency-jars</directory>
+                            <outputDirectory>/lib</outputDirectory>
+                            <includes>
+                                <include>*.jar</include>
+                            </includes>
+                        </fileSet>
+                        <fileSet>
+                            <directory>${project.basedir}/src/main/resources</directory>
+                            <outputDirectory>/</outputDirectory>
+                            <includes>
+                                <include>**/*.properties</include> <!-- Adjust as per your file types -->
+                                <!-- Add more <include> elements as needed -->
+                            </includes>
+                        </fileSet>
+                    </fileSets>
+                </configuration>
                 <executions>
                     <execution>
                         <id>create-zip</id>
@@ -14,32 +62,6 @@
                         <goals>
                             <goal>single</goal>
                         </goals>
-                        <configuration>
-                            <descriptorRefs>
-                                <descriptorRef>jar-with-dependencies</descriptorRef>
-                            </descriptorRefs>
-                            <archive>
-                                <manifest>
-                                    <mainClass>YourMainClass</mainClass>
-                                </manifest>
-                            </archive>
-                            <appendAssemblyId>false</appendAssemblyId>
-                            <finalName>your-artifact-name</finalName>
-                            <outputDirectory>${project.build.directory}/zip</outputDirectory>
-                            <formats>
-                                <format>zip</format>
-                            </formats>
-                            <fileSets>
-                                <fileSet>
-                                    <directory>${project.basedir}/src/main/resources</directory>
-                                    <outputDirectory>/</outputDirectory>
-                                    <includes>
-                                        <include>**/*.properties</include> <!-- Adjust as per your file types -->
-                                        <!-- Add more <include> elements as needed -->
-                                    </includes>
-                                </fileSet>
-                            </fileSets>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
