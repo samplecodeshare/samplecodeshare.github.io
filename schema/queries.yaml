@@ -1,0 +1,8 @@
+queries:
+  - table_name: table1
+    dsn: DSN=dsn_name1;UID=username1;PWD=password1
+    sql_query: SELECT * FROM table1
+  - table_name: table2
+    dsn: DSN=dsn_name2;UID=username2;PWD=password2
+    sql_query: SELECT * FROM table2
+  # Add more entries as needed
