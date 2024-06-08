@@ -1,0 +1,20 @@
+openapi: 3.0.0
+info:
+  title: {table_name} API
+  version: 1.0.0
+paths:
+  /{table_name}:
+    get:
+      summary: Get list of {table_name}
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/{table_name}'
+components:
+  schemas:
+    {table_name}:
+      type: object
+      properties: {}
