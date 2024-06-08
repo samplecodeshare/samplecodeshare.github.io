@@ -54,20 +54,28 @@ def generate_openapi_spec_from_template(template_path, table_name, columns, colu
     
     return openapi_spec
 
-# Main function to execute SQL query and generate OpenAPI spec
+# Main function to execute SQL queries and generate OpenAPI specs
 def main():
-    dsn = 'DSN=your_dsn_name;UID=your_username;PWD=your_password'
-    sql_query = 'your_sql_query'  # Replace with your SQL query
-    table_name = 'your_table_name'  # Replace with your table name
+    # Load configuration from YAML file
+    config_path = 'config.yaml'  # Path to your configuration file
     template_path = 'openapi_template.yaml'  # Path to your OpenAPI template
     
-    columns, column_types = execute_sql_query(dsn, sql_query)
-    openapi_spec = generate_openapi_spec_from_template(template_path, table_name, columns, column_types)
+    with open(config_path, 'r') as file:
+        config = yaml.safe_load(file)
     
-    with open(f'{table_name}_openapi.yaml', 'w') as file:
-        yaml.dump(openapi_spec, file, sort_keys=False)
+    for query in config['queries']:
+        table_name = query['table_name']
+        dsn = query['dsn']
+        sql_query = query['sql_query']
         
-    print(f'OpenAPI spec for {table_name} generated successfully!')
+        columns, column_types = execute_sql_query(dsn, sql_query)
+        openapi_spec = generate_openapi_spec_from_template(template_path, table_name, columns, column_types)
+        
+        output_file = f'{table_name}_openapi.yaml'
+        with open(output_file, 'w') as file:
+            yaml.dump(openapi_spec, file, sort_keys=False)
+            
+        print(f'OpenAPI spec for {table_name} generated successfully and saved to {output_file}!')
 
 if __name__ == '__main__':
     main()
