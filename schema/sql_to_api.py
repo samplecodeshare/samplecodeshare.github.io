@@ -1,46 +1,80 @@
-import pyodbc
 import yaml
+import pyodbc
+import sqlalchemy
+from sqlalchemy import create_engine
+
+# Function to load configuration files
+def load_configs(config_path, passwords_path):
+    with open(config_path, 'r') as file:
+        config = yaml.safe_load(file)
+    with open(passwords_path, 'r') as file:
+        passwords = yaml.safe_load(file)
+    return config, passwords
 
 # Function to connect to the database and execute SQL query
-def execute_sql_query(dsn, sql_query):
-    connection = pyodbc.connect(dsn)
-    cursor = connection.cursor()
-    
-    # Execute the supplied SQL query
-    cursor.execute(sql_query)
-    columns = [column[0] for column in cursor.description]
-    column_types = [desc[1] for desc in cursor.description]
-    
-    cursor.close()
+def execute_sql_query(db_type, dsn, password, sql_query):
+    if db_type == 'mssql':
+        connection_string = f"{dsn};PWD={password}"
+        connection = pyodbc.connect(connection_string)
+    else:
+        dsn_with_password = dsn.replace("@", f":{password}@", 1)
+        engine = create_engine(dsn_with_password)
+        connection = engine.connect()
+
+    result = connection.execute(sql_query)
+    columns = result.keys()
+    column_types = [result.cursor.description[i][1] for i in range(len(columns))]
+
     connection.close()
     
     return columns, column_types
 
 # Function to map SQL data types to OpenAPI data types
-def map_sql_type_to_openapi_type(sql_type):
+def map_sql_type_to_openapi_type(db_type, sql_type):
     type_mapping = {
-        'int': 'integer',
-        'varchar': 'string',
-        'nvarchar': 'string',
-        'text': 'string',
-        'date': 'string',
-        'datetime': 'string',
-        'bit': 'boolean',
-        'float': 'number',
-        'decimal': 'number',
-        'numeric': 'number'
-        # Add other SQL to OpenAPI type mappings as needed
+        'mssql': {
+            'int': 'integer',
+            'varchar': 'string',
+            'nvarchar': 'string',
+            'text': 'string',
+            'date': 'string',
+            'datetime': 'string',
+            'bit': 'boolean',
+            'float': 'number',
+            'decimal': 'number',
+            'numeric': 'number'
+        },
+        'mysql': {
+            'INTEGER': 'integer',
+            'VARCHAR': 'string',
+            'TEXT': 'string',
+            'DATE': 'string',
+            'DATETIME': 'string',
+            'BOOLEAN': 'boolean',
+            'FLOAT': 'number',
+            'DECIMAL': 'number'
+        },
+        'postgresql': {
+            'INTEGER': 'integer',
+            'VARCHAR': 'string',
+            'TEXT': 'string',
+            'DATE': 'string',
+            'TIMESTAMP': 'string',
+            'BOOLEAN': 'boolean',
+            'FLOAT': 'number',
+            'NUMERIC': 'number'
+        }
     }
-    return type_mapping.get(sql_type, 'string')
+    return type_mapping[db_type].get(sql_type.upper(), 'string')
 
 # Function to generate OpenAPI specification from template
-def generate_openapi_spec_from_template(template_path, table_name, columns, column_types):
+def generate_openapi_spec_from_template(template_path, table_name, columns, column_types, db_type):
     with open(template_path, 'r') as file:
         openapi_spec = yaml.safe_load(file)
     
     # Define the schema properties
     schema_properties = {
-        columns[i]: {'type': map_sql_type_to_openapi_type(column_types[i].__name__)}
+        columns[i]: {'type': map_sql_type_to_openapi_type(db_type, column_types[i].__name__)}
         for i in range(len(columns))
     }
     
@@ -56,26 +90,32 @@ def generate_openapi_spec_from_template(template_path, table_name, columns, colu
 
 # Main function to execute SQL queries and generate OpenAPI specs
 def main():
-    # Load configuration from YAML file
-    config_path = 'config.yaml'  # Path to your configuration file
-    template_path = 'openapi_template.yaml'  # Path to your OpenAPI template
+    # Paths to configuration files
+    config_path = 'config.yaml'
+    passwords_path = 'passwords.yaml'
+    template_path = 'openapi_template.yaml'
     
-    with open(config_path, 'r') as file:
-        config = yaml.safe_load(file)
+    # Load configurations
+    config, passwords = load_configs(config_path, passwords_path)
     
-    for query in config['queries']:
-        table_name = query['table_name']
-        dsn = query['dsn']
-        sql_query = query['sql_query']
+    for db in config['databases']:
+        db_name = db['name']
+        db_type = db['db_type']
+        dsn = db['dsn']
+        password = passwords['passwords'][db_name]
         
-        columns, column_types = execute_sql_query(dsn, sql_query)
-        openapi_spec = generate_openapi_spec_from_template(template_path, table_name, columns, column_types)
-        
-        output_file = f'{table_name}_openapi.yaml'
-        with open(output_file, 'w') as file:
-            yaml.dump(openapi_spec, file, sort_keys=False)
+        for query in db['queries']:
+            table_name = query['table_name']
+            sql_query = query['sql_query']
             
-        print(f'OpenAPI spec for {table_name} generated successfully and saved to {output_file}!')
+            columns, column_types = execute_sql_query(db_type, dsn, password, sql_query)
+            openapi_spec = generate_openapi_spec_from_template(template_path, table_name, columns, column_types, db_type)
+            
+            output_file = f'{table_name}_openapi.yaml'
+            with open(output_file, 'w') as file:
+                yaml.dump(openapi_spec, file, sort_keys=False)
+                
+            print(f'OpenAPI spec for {table_name} generated successfully and saved to {output_file}!')
 
 if __name__ == '__main__':
     main()
