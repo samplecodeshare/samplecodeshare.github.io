@@ -1,14 +1,20 @@
-queries:
-  - table_name: table1
+databases:
+  - name: db1
     db_type: mssql
-    dsn: DSN=dsn_name1;UID=username1;PWD=password1
-    sql_query: SELECT * FROM table1
-  - table_name: table2
+    dsn: DSN=dsn_name1;UID=username1
+    queries:
+      - table_name: table1
+        sql_query: SELECT * FROM table1
+  - name: db2
     db_type: mysql
-    dsn: mysql+mysqlconnector://username2:password2@host2:port2/database2
-    sql_query: SELECT * FROM table2
-  - table_name: table3
+    dsn: mysql+mysqlconnector://username2@host2:port2/database2
+    queries:
+      - table_name: table2
+        sql_query: SELECT * FROM table2
+  - name: db3
     db_type: postgresql
-    dsn: postgresql+psycopg2://username3:password3@host3:port3/database3
-    sql_query: SELECT * FROM table3
-  # Add more entries as needed
+    dsn: postgresql+psycopg2://username3@host3:port3/database3
+    queries:
+      - table_name: table3
+        sql_query: SELECT * FROM table3
+  # Add more database configurations and queries as needed
