@@ -33,48 +33,25 @@ def map_sql_type_to_openapi_type(sql_type):
     }
     return type_mapping.get(sql_type, 'string')
 
-# Function to generate OpenAPI specification
-def generate_openapi_spec(table_name, columns, column_types):
-    # Define the schema in the components section
+# Function to generate OpenAPI specification from template
+def generate_openapi_spec_from_template(template_path, table_name, columns, column_types):
+    with open(template_path, 'r') as file:
+        openapi_spec = yaml.safe_load(file)
+    
+    # Define the schema properties
     schema_properties = {
         columns[i]: {'type': map_sql_type_to_openapi_type(column_types[i].__name__)}
         for i in range(len(columns))
     }
     
-    openapi_spec = {
-        'openapi': '3.0.0',
-        'info': {
-            'title': f'{table_name} API',
-            'version': '1.0.0'
-        },
-        'paths': {
-            f'/{table_name}': {
-                'get': {
-                    'summary': f'Get list of {table_name}',
-                    'responses': {
-                        '200': {
-                            'description': f'Successful response',
-                            'content': {
-                                'application/json': {
-                                    'schema': {
-                                        '$ref': f'#/components/schemas/{table_name}'
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        'components': {
-            'schemas': {
-                table_name: {
-                    'type': 'object',
-                    'properties': schema_properties
-                }
-            }
-        }
-    }
+    # Update the OpenAPI spec with dynamic values
+    openapi_spec['info']['title'] = openapi_spec['info']['title'].format(table_name=table_name)
+    openapi_spec['paths'][f'/{table_name}'] = openapi_spec['paths']['/{table_name}']
+    openapi_spec['components']['schemas'][table_name]['properties'] = schema_properties
+
+    # Remove the placeholder in the paths
+    del openapi_spec['paths']['/{table_name}']
+    
     return openapi_spec
 
 # Main function to execute SQL query and generate OpenAPI spec
@@ -82,9 +59,10 @@ def main():
     dsn = 'DSN=your_dsn_name;UID=your_username;PWD=your_password'
     sql_query = 'your_sql_query'  # Replace with your SQL query
     table_name = 'your_table_name'  # Replace with your table name
+    template_path = 'openapi_template.yaml'  # Path to your OpenAPI template
     
     columns, column_types = execute_sql_query(dsn, sql_query)
-    openapi_spec = generate_openapi_spec(table_name, columns, column_types)
+    openapi_spec = generate_openapi_spec_from_template(template_path, table_name, columns, column_types)
     
     with open(f'{table_name}_openapi.yaml', 'w') as file:
         yaml.dump(openapi_spec, file, sort_keys=False)
