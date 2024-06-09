@@ -1,3 +1,4 @@
+import os
 import sqlite3
 import yaml
 
@@ -10,6 +11,8 @@ def create_sqlite_table(db_name):
     create_table_sql = '''
     CREATE TABLE IF NOT EXISTS schema_info (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        domain TEXT NOT NULL,
+        table_name TEXT NOT NULL,
         field TEXT NOT NULL,
         field_type TEXT NOT NULL,
         path TEXT NOT NULL
@@ -22,11 +25,11 @@ def create_sqlite_table(db_name):
 
     return conn, cursor
 
-def insert_schema_info(cursor, field, field_type, path):
+def insert_schema_info(cursor, domain, table_name, field, field_type, path):
     # Define the SQL command to insert data
-    insert_data_sql = 'INSERT INTO schema_info (field, field_type, path) VALUES (?, ?, ?)'
+    insert_data_sql = 'INSERT INTO schema_info (domain, table_name, field, field_type, path) VALUES (?, ?, ?, ?, ?)'
     # Execute the insert data command
-    cursor.execute(insert_data_sql, (field, field_type, path))
+    cursor.execute(insert_data_sql, (domain, table_name, field, field_type, path))
 
 def traverse_schema(schema, components, parent_path="root"):
     fields_info = []
@@ -66,22 +69,40 @@ def load_openapi_spec(file_path):
     with open(file_path, 'r') as file:
         return yaml.safe_load(file)
 
-def main():
-    db_name = 'openapi_schema.db'
-    openapi_spec_path = 'openapi.yaml'  # Path to your OpenAPI spec file
-
+def process_yaml_file(file_path, cursor):
+    print("Extracting schema for file=" + file_path)
     # Load the OpenAPI spec
-    openapi_spec = load_openapi_spec(openapi_spec_path)
+    openapi_spec = load_openapi_spec(file_path)
+    
+    # Extract domain and table name from the `info` tag
+    info = openapi_spec.get('info', {})
+    domain = info.get('domain', 'unknown_domain')
+    table_name = info.get('title', 'unknown_table')
+    
     components = openapi_spec.get('components', {}).get('schemas', {})
-
-    # Create SQLite table
-    conn, cursor = create_sqlite_table(db_name)
 
     # Extract schema information and store it in the database
     for schema_name, schema_details in components.items():
         fields_info = traverse_schema(schema_details, components, schema_name)
         for field, field_type, path in fields_info:
-            insert_schema_info(cursor, field, field_type, path)
+            insert_schema_info(cursor, domain, table_name, field, field_type, path)
+
+def traverse_directory(directory, cursor):
+    for root, _, files in os.walk(directory):
+        for file in files:
+            if file.endswith('.yaml'):
+                file_path = os.path.join(root, file)
+                process_yaml_file(file_path, cursor)
+
+def main():
+    db_name = 'openapi_schema.db'
+    directory = '.'  # Directory containing the YAML files
+
+    # Create SQLite table
+    conn, cursor = create_sqlite_table(db_name)
+
+    # Traverse the directory and process each YAML file
+    traverse_directory(directory, cursor)
 
     # Commit the changes and close the connection
     conn.commit()
