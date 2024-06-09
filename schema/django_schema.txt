@@ -1,0 +1,47 @@
+---- models.py ------------------
+  
+from django.db import models
+
+class SchemaInfo(models.Model):
+    domain = models.CharField(max_length=255)
+    table_name = models.CharField(max_length=255)
+    field = models.CharField(max_length=255)
+    field_type = models.CharField(max_length=255)
+    path = models.TextField()
+
+    def __str__(self):
+        return f"{self.domain} - {self.table_name} - {self.field}"
+
+
+------- views.py ----------------------------------------
+
+from django.shortcuts import render
+from .models import SchemaInfo
+
+def schema_info_view(request):
+    schema_info = SchemaInfo.objects.all()
+    return render(request, 'schema_info.html', {'schema_info': schema_info})
+
+---- html -------------------
+
+ <tbody>
+            {% for info in schema_info %}
+            <tr>
+                <td>{{ info.domain }}</td>
+                <td>{{ info.table_name }}</td>
+                <td>{{ info.field }}</td>
+                <td>{{ info.field_type }}</td>
+                <td>{{ info.path }}</td>
+            </tr>
+            {% endfor %}
+
+-------  settings.py ----------------
+
+  DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',  # Default location in the project directory
+    }
+}
+
+          
