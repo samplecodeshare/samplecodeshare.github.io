@@ -1,6 +1,5 @@
 import sqlite3
 import yaml
-import os
 
 def create_sqlite_table(db_name):
     # Connect to the SQLite database (or create it if it doesn't exist)
@@ -53,7 +52,7 @@ def traverse_schema(schema, components, parent_path="root"):
                         ref_path = item_details['$ref']
                         ref_schema_name = ref_path.split('/')[-1]
                         ref_schema = components[ref_schema_name]
-                        ref_fields = traverse_schema(ref_schema, components, field_path + '[]')
+                        ref_fields = traverse_schema(ref_schema, components, f"{field_path}[]")
                         fields_info.extend(ref_fields)
                     else:
                         item_type = item_details.get('type', 'object')
@@ -63,6 +62,12 @@ def traverse_schema(schema, components, parent_path="root"):
 
     if 'properties' in schema:
         recurse(schema['properties'], parent_path)
+    elif 'items' in schema and '$ref' in schema['items']:
+        ref_path = schema['items']['$ref']
+        ref_schema_name = ref_path.split('/')[-1]
+        ref_schema = components[ref_schema_name]
+        ref_fields = traverse_schema(ref_schema, components, f"{parent_path}[]")
+        fields_info.extend(ref_fields)
     
     return fields_info
 
