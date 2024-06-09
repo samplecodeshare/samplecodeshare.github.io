@@ -36,10 +36,7 @@ def traverse_schema(schema, components, parent_path="root"):
             field_path = f"{current_path}/{field}"
             if '$ref' in details:
                 ref_path = details['$ref']
-                ref_schema_name = ref_path.split('/')[-1]
-                ref_schema = components[ref_schema_name]
-                ref_fields = traverse_schema(ref_schema, components, field_path)
-                fields_info.extend(ref_fields)
+                fields_info.append((field, 'ref', f"{current_path}{ref_path}"))
             else:
                 field_type = details.get('type', 'object')
                 fields_info.append((field, field_type, field_path))
@@ -50,10 +47,7 @@ def traverse_schema(schema, components, parent_path="root"):
                     item_details = details['items']
                     if '$ref' in item_details:
                         ref_path = item_details['$ref']
-                        ref_schema_name = ref_path.split('/')[-1]
-                        ref_schema = components[ref_schema_name]
-                        ref_fields = traverse_schema(ref_schema, components, f"{field_path}[]")
-                        fields_info.extend(ref_fields)
+                        fields_info.append((f"{field}[]", 'ref', f"{current_path}{ref_path}"))
                     else:
                         item_type = item_details.get('type', 'object')
                         fields_info.append((f"{field}[]", item_type, f"{field_path}[]"))
@@ -64,10 +58,7 @@ def traverse_schema(schema, components, parent_path="root"):
         recurse(schema['properties'], parent_path)
     elif 'items' in schema and '$ref' in schema['items']:
         ref_path = schema['items']['$ref']
-        ref_schema_name = ref_path.split('/')[-1]
-        ref_schema = components[ref_schema_name]
-        ref_fields = traverse_schema(ref_schema, components, f"{parent_path}[]")
-        fields_info.extend(ref_fields)
+        fields_info.append((parent_path, 'ref', f"{parent_path}{ref_path}"))
     
     return fields_info
 
