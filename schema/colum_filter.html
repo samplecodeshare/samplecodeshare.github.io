@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bootstrap Table with Column Search and Export</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Table CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-table/dist/bootstrap-table.min.css">
+    <style>
+        .search-input {
+            width: 100%;
+            padding: 0.5rem;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h2>Bootstrap Table with Column Search and Export</h2>
+        <table 
+            id="table"
+            data-toggle="table"
+            data-search="true"
+            data-show-columns="true"
+            data-pagination="true"
+            data-page-size="20"
+            class="table">
+            <thead>
+                <tr>
+                    <th><input type="checkbox" id="select-all"></th>
+                    <th data-field="id" data-sortable="true">ID</th>
+                    <th data-field="name" data-sortable="true">Name</th>
+                    <th data-field="age" data-sortable="true">Age</th>
+                    <th data-field="email" data-sortable="true">Email</th>
+                </tr>
+                <tr>
+                    <th></th>
+                    <th><input type="text" class="search-input" placeholder="Search ID" data-field="id"></th>
+                    <th><input type="text" class="search-input" placeholder="Search Name" data-field="name"></th>
+                    <th><input type="text" class="search-input" placeholder="Search Age" data-field="age"></th>
+                    <th><input type="text" class="search-input" placeholder="Search Email" data-field="email"></th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                <!-- Rows will be populated via JavaScript -->
+            </tbody>
+        </table>
+        <button id="downloadExcel" class="btn btn-success mt-3">Download Selected Rows</button>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap Table JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-table/dist/bootstrap-table.min.js"></script>
+    <!-- SheetJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function to generate random data
+            function generateRandomData(numRows) {
+                const names = ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown", "Charlie Davis"];
+                const domains = ["example.com", "mail.com", "test.com", "demo.com", "sample.com"];
+                let data = [];
+
+                for (let i = 1; i <= numRows; i++) {
+                    let name = names[Math.floor(Math.random() * names.length)];
+                    let age = Math.floor(Math.random() * 60) + 18;
+                    let email = name.split(' ').join('.').toLowerCase() + '@' + domains[Math.floor(Math.random() * domains.length)];
+                    data.push({ id: i, name: name, age: age, email: email });
+                }
+
+                return data;
+            }
+
+            // Populate table with random data
+            function populateTable(data) {
+                let tableBody = document.getElementById('table-body');
+                tableBody.innerHTML = '';
+
+                data.forEach(row => {
+                    let tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><input type="checkbox" class="row-checkbox"></td>
+                        <td data-field="id">${row.id}</td>
+                        <td data-field="name">${row.name}</td>
+                        <td data-field="age">${row.age}</td>
+                        <td data-field="email">${row.email}</td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+            }
+
+            // Generate and populate table with 1,000 rows
+            const data = generateRandomData(1000);
+            populateTable(data);
+
+            // Initialize Bootstrap Table
+            $('#table').bootstrapTable();
+
+            // Filter table based on column input
+            function filterTable() {
+                var filters = {};
+                document.querySelectorAll('.search-input').forEach(function(input) {
+                    filters[input.dataset.field] = input.value.toLowerCase();
+                });
+
+                document.querySelectorAll('#table tbody tr').forEach(function(row) {
+                    var showRow = true;
+                    for (var field in filters) {
+                        if (filters[field]) {
+                            var cellText = row.querySelector('td[data-field="' + field + '"]').textContent.toLowerCase();
+                            if (cellText.indexOf(filters[field]) === -1) {
+                                showRow = false;
+                                break;
+                            }
+                        }
+                    }
+                    row.style.display = showRow ? '' : 'none';
+                });
+            }
+
+            // Attach filter event to each search input
+            document.querySelectorAll('.search-input').forEach(function(input) {
+                input.addEventListener('keyup', filterTable);
+            });
+
+            // Select all checkbox functionality
+            document.getElementById('select-all').addEventListener('change', function() {
+                var checkboxes = document.querySelectorAll('.row-checkbox');
+                checkboxes.forEach(function(checkbox) {
+                    checkbox.checked = document.getElementById('select-all').checked;
+                });
+            });
+
+            // Download selected rows to Excel
+            document.getElementById('downloadExcel').addEventListener('click', function() {
+                var selectedRows = [];
+                document.querySelectorAll('.row-checkbox:checked').forEach(function(checkbox) {
+                    var row = checkbox.closest('tr');
+                    selectedRows.push({
+                        id: row.querySelector('td[data-field="id"]').textContent,
+                        name: row.querySelector('td[data-field="name"]').textContent,
+                        age: row.querySelector('td[data-field="age"]').textContent,
+                        email: row.querySelector('td[data-field="email"]').textContent
+                    });
+                });
+
+                var ws = XLSX.utils.json_to_sheet(selectedRows);
+                var wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+                XLSX.writeFile(wb, "selected_rows.xlsx");
+            });
+        });
+    </script>
+</body>
+</html>
