@@ -1,313 +1,141 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bootstrap Tables with Column Search, Pagination, and Export</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Table CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-table/dist/bootstrap-table.min.css">
+    <title>AG Grid Example with Multi-Checkbox and Font Size</title>
+    <!-- AG Grid CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/styles/ag-grid.css">
+    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/styles/ag-theme-alpine.css">
     <style>
-        .search-input {
+        .ag-theme-alpine {
+            height: 500px;
             width: 100%;
-            padding: 0.5rem;
-            box-sizing: border-box;
         }
-        .card {
-            margin-bottom: 20px;
+
+        .search-bar {
+            margin-bottom: 10px;
+        }
+
+        .ag-cell {
+            font-size: 12px;
+            /* Adjust font size */
+        }
+
+        .ag-theme-alpine .ag-checkbox-input-wrapper {
+            display: flex;
+            align-items: center;
+        }
+
+        .ag-theme-alpine .ag-checkbox-input {
+            margin-right: 5px;
         }
     </style>
 </head>
+
 <body>
-    <div class="container mt-4">
-        <h2>Bootstrap Tables with Column Search, Pagination, and Export</h2>
-        
-        <!-- First Table -->
-        <div class="mb-4">
-            <h3>Table 1</h3>
-            <table 
-                id="table1"
-                data-toggle="table"
-                data-search="true"
-                data-show-columns="true"
-                data-pagination="true"
-                data-page-size="20"
-                class="table">
-                <thead>
-                    <tr>
-                        <th><input type="checkbox" id="select-all-table1"></th>
-                        <th data-field="id" data-sortable="true">ID</th>
-                        <th data-field="name" data-sortable="true">Name</th>
-                        <th data-field="age" data-sortable="true">Age</th>
-                        <th data-field="email" data-sortable="true">Email</th>
-                    </tr>
-                    <tr>
-                        <th></th>
-                        <th><input type="text" class="search-input" placeholder="Search ID" data-field="id"></th>
-                        <th><input type="text" class="search-input" placeholder="Search Name" data-field="name"></th>
-                        <th><input type="text" class="search-input" placeholder="Search Age" data-field="age"></th>
-                        <th><input type="text" class="search-input" placeholder="Search Email" data-field="email"></th>
-                    </tr>
-                </thead>
-                <tbody id="table1-body">
-                    <tr>
-                        <td><input type="checkbox" class="row-checkbox"></td>
-                        <td>1</td>
-                        <td>John Doe</td>
-                        <td>30</td>
-                        <td>john.doe@example.com</td>
-                    </tr>
-                    <tr>
-                        <td><input type="checkbox" class="row-checkbox"></td>
-                        <td>2</td>
-                        <td>Jane Smith</td>
-                        <td>25</td>
-                        <td>jane.smith@example.com</td>
-                    </tr>
-                    <tr>
-                        <td><input type="checkbox" class="row-checkbox"></td>
-                        <td>3</td>
-                        <td>Alice Johnson</td>
-                        <td>35</td>
-                        <td>alice.johnson@example.com</td>
-                    </tr>
-                    <tr>
-                        <td><input type="checkbox" class="row-checkbox"></td>
-                        <td>4</td>
-                        <td>Bob Brown</td>
-                        <td>28</td>
-                        <td>bob.brown@example.com</td>
-                    </tr>
-                    <tr>
-                        <td><input type="checkbox" class="row-checkbox"></td>
-                        <td>5</td>
-                        <td>Charlie Davis</td>
-                        <td>22</td>
-                        <td>charlie.davis@example.com</td>
-                    </tr>
-                    <tr>
-                        <td><input type="checkbox" class="row-checkbox"></td>
-                        <td>6</td>
-                        <td>David Evans</td>
-                        <td>40</td>
-                        <td>david.evans@example.com</td>
-                    </tr>
-                    <tr>
-                        <td><input type="checkbox" class="row-checkbox"></td>
-                        <td>7</td>
-                        <td>Ella Wilson</td>
-                        <td>27</td>
-                        <td>ella.wilson@example.com</td>
-                    </tr>
-                    <tr>
-                        <td><input type="checkbox" class="row-checkbox"></td>
-                        <td>8</td>
-                        <td>Frank Moore</td>
-                        <td>33</td>
-                        <td>frank.moore@example.com</td>
-                    </tr>
-                    <tr>
-                        <td><input type="checkbox" class="row-checkbox"></td>
-                        <td>9</td>
-                        <td>Grace Hall</td>
-                        <td>29</td>
-                        <td>grace.hall@example.com</td>
-                    </tr>
-                    <tr>
-                        <td><input type="checkbox" class="row-checkbox"></td>
-                        <td>10</td>
-                        <td>Henry Clark</td>
-                        <td>31</td>
-                        <td>henry.clark@example.com</td>
-                    </tr>
-                </tbody>
-            </table>
-            <button id="downloadExcel-table1" class="btn btn-success mt-3">Download Selected Rows</button>
+    <div class="container">
+        <h1 class="mt-4 mb-4">AG Grid Example with Multi-Checkbox and Font Size</h1>
+
+        <!-- Search Bar -->
+        <div class="search-bar">
+            <input type="text" id="searchBox" class="form-control" placeholder="Search..." onkeyup="onSearch()">
         </div>
-        
-        <!-- Second Table -->
-        <div class="mb-4">
-            <h3>Table 2</h3>
-            <table 
-                id="table2"
-                data-toggle="table"
-                data-search="true"
-                data-show-columns="true"
-                data-pagination="true"
-                data-page-size="20"
-                class="table">
-                <thead>
-                    <tr>
-                        <th><input type="checkbox" id="select-all-table2"></th>
-                        <th data-field="id" data-sortable="true">ID</th>
-                        <th data-field="name" data-sortable="true">Name</th>
-                        <th data-field="age" data-sortable="true">Age</th>
-                        <th data-field="email" data-sortable="true">Email</th>
-                    </tr>
-                    <tr>
-                        <th></th>
-                        <th><input type="text" class="search-input" placeholder="Search ID" data-field="id"></th>
-                        <th><input type="text" class="search-input" placeholder="Search Name" data-field="name"></th>
-                        <th><input type="text" class="search-input" placeholder="Search Age" data-field="age"></th>
-                        <th><input type="text" class="search-input" placeholder="Search Email" data-field="email"></th>
-                    </tr>
-                </thead>
-                <tbody id="table2-body">
-                    <tr>
-                        <td><input type="checkbox" class="row-checkbox"></td>
-                        <td>1</td>
-                        <td>Liam White</td>
-                        <td>30</td>
-                        <td>liam.white@example.com</td>
-                    </tr>
-                    <tr>
-                        <td><input type="checkbox" class="row-checkbox"></td>
-                        <td>2</td>
-                        <td>Emma Thompson</td>
-                        <td>25</td>
-                        <td>emma.thompson@example.com</td>
-                    </tr>
-                    <tr>
-                        <td><input type="checkbox" class="row-checkbox"></td>
-                        <td>3</td>
-                        <td>Olivia Harris</td>
-                        <td>35</td>
-                        <td>olivia.harris@example.com</td>
-                    </tr>
-                    <tr>
-                        <td><input type="checkbox" class="row-checkbox"></td>
-                        <td>4</td>
-                        <td>Noah Martin</td>
-                        <td>28</td>
-                        <td>noah.martin@example.com</td>
-                    </tr>
-                    <tr>
-                        <td><input type="checkbox" class="row-checkbox"></td>
-                        <td>5</td>
-                        <td>Ava Lewis</td>
-                        <td>22</td>
-                        <td>ava.lewis@example.com</td>
-                    </tr>
-                    <tr>
-                        <td><input type="checkbox" class="row-checkbox"></td>
-                        <td>6</td>
-                        <td>Sophia Lee</td>
-                        <td>40</td>
-                        <td>sophia.lee@example.com</td>
-                    </tr>
-                    <tr>
-                        <td><input type="checkbox" class="row-checkbox"></td>
-                        <td>7</td>
-                        <td>Mason Walker</td>
-                        <td>27</td>
-                        <td>mason.walker@example.com</td>
-                    </tr>
-                    <tr>
-                        <td><input type="checkbox" class="row-checkbox"></td>
-                        <td>8</td>
-                        <td>Isabella King</td>
-                        <td>33</td>
-                        <td>isabella.king@example.com</td>
-                    </tr>
-                    <tr>
-                        <td><input type="checkbox" class="row-checkbox"></td>
-                        <td>9</td>
-                        <td>Mia Wright</td>
-                        <td>29</td>
-                        <td>mia.wright@example.com</td>
-                    </tr>
-                    <tr>
-                        <td><input type="checkbox" class="row-checkbox"></td>
-                        <td>10</td>
-                        <td>Ethan Scott</td>
-                        <td>31</td>
-                        <td>ethan.scott@example.com</td>
-                    </tr>
-                </tbody>
-            </table>
-            <button id="downloadExcel-table2" class="btn btn-success mt-3">Download Selected Rows</button>
-        </div>
+
+        <!-- Button to clear filters -->
+        <button id="clearFiltersBtn" class="btn btn-secondary">Clear Filters</button>
+
+        <!-- Button to download selected rows -->
+        <button id="downloadBtn" class="btn btn-primary">Download Selected Rows</button>
+
+        <!-- Div to hold the AG Grid -->
+        <div id="myGrid" class="ag-theme-alpine"></div>
     </div>
 
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <!-- Bootstrap JS -->
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
-    <!-- Bootstrap Table JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap-table/dist/bootstrap-table.min.js"></script>
-    <!-- SheetJS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- AG Grid JavaScript -->
+    <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.noStyle.js"></script>
     <script>
-        $(document).ready(function() {
-            // Initialize Bootstrap Tables
-            $('#table1').bootstrapTable();
-            $('#table2').bootstrapTable();
+        let gridOptions;
 
-            // Filter table based on column input
-            function filterTable(tableId) {
-                var filters = {};
-                $(`#${tableId} .search-input`).each(function() {
-                    filters[$(this).data('field')] = $(this).val().toLowerCase();
-                });
+        // Function to handle search
+        function onSearch() {
+            const searchText = document.getElementById('searchBox').value;
+            gridOptions.api.setQuickFilter(searchText);
+        }
 
-                const rows = $(`#${tableId} tbody tr`);
-                rows.each(function() {
-                    const row = $(this);
-                    let show = true;
-                    Object.keys(filters).forEach(field => {
-                        const cell = row.find(`td:contains(${field})`).next();
-                        if (filters[field] && !cell.text().toLowerCase().includes(filters[field])) {
-                            show = false;
+        // Function to generate row number column
+        function rowNumberCellRenderer(params) {
+            return params.node.rowIndex + 1;
+        }
+
+        function handleAction(id) {
+            alert(id);
+        }
+
+
+        // Initialize the grid
+        document.addEventListener('DOMContentLoaded', () => {
+
+            fetch('data.json')
+                .then(response => response.json())
+                .then(data => {
+                    // Define ag-Grid column definitions with column-level filters
+                    const columnDefs = [
+                        { headerName: '#', field: 'rowNumber', width: 50, cellRenderer: rowNumberCellRenderer },
+                        { headerName: 'ID', field: 'id', filter: 'agNumberColumnFilter' },
+                        { headerName: 'Name', field: 'name', filter: 'agTextColumnFilter' },
+                        { headerName: 'Age', field: 'age', filter: 'agNumberColumnFilter' },
+                        { headerName: 'Gender', field: 'gender', filter: 'agTextColumnFilter' },
+                        { headerName: 'Select', field: 'select', width: 100, checkboxSelection: true, headerCheckboxSelection: true },
+                        {
+                            headerName: 'Actions',
+                            field: 'actions',
+                            width: 100,
+                            cellRenderer: function (params) {
+                                return `<button onclick="handleAction(${params.data.id})">Action</button>`;
+                            }
                         }
-                    });
-                    row.toggle(show);
-                });
-            }
+                    ];
 
-            // Attach filter event to each search input
-            $('.search-input').on('keyup', function() {
-                const tableId = $(this).closest('table').attr('id');
-                filterTable(tableId);
-            });
-
-            // Download selected rows as Excel file
-            function downloadExcel(tableId) {
-                const selectedRows = [];
-                $(`#${tableId} tbody input.row-checkbox:checked`).each(function() {
-                    const row = $(this).closest('tr');
-                    const rowData = {};
-                    row.find('td').each((i, cell) => {
-                        if (i > 0) { // skip checkbox cell
-                            rowData[$(`#${tableId} thead th`).eq(i).data('field')] = $(cell).text();
+                    // Define ag-Grid grid options
+                    gridOptions = {
+                        columnDefs: columnDefs,
+                        rowData: data,
+                        pagination: true,
+                        enableSorting: true,
+                        enableFilter: true,
+                        paginationPageSize: 20,
+                        getRowHeight: function (params) {
+                            return 20; // Set custom row height
                         }
+                    };
+
+                    // Initialize ag-Grid
+                    const gridDiv = document.querySelector('#myGrid');
+                    const grid = new agGrid.Grid(gridDiv, gridOptions);
+                    gridOptions.api.addEventListener('rowClicked', function (event) {
+                        event.node.setSelected(!event.node.isSelected());
                     });
-                    selectedRows.push(rowData);
-                });
 
-                const ws = XLSX.utils.json_to_sheet(selectedRows);
-                const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
-                XLSX.writeFile(wb, `${tableId}_data.xlsx`);
-            }
+                    // Clear filters button click event
+                    document.getElementById('clearFiltersBtn').addEventListener('click', () => {
+                        gridOptions.api.setFilterModel(null); // Clear all filter models
+                        gridOptions.api.onFilterChanged(); // Apply the changes
+                    });
 
-            $('#downloadExcel-table1').on('click', function() {
-                downloadExcel('table1');
-            });
+                    // Download button click event
+                    const downloadButton = document.getElementById('downloadBtn');
+                    downloadButton.addEventListener('click', () => {
+                        // Get all row data
+                        // alert("selected");
+                        gridOptions.api.exportDataAsExcel();
+                    });
 
-            $('#downloadExcel-table2').on('click', function() {
-                downloadExcel('table2');
-            });
-
-            // Select/deselect all checkboxes
-            $('#select-all-table1').on('change', function() {
-                $('#table1 tbody input.row-checkbox').prop('checked', this.checked);
-            });
-
-            $('#select-all-table2').on('change', function() {
-                $('#table2 tbody input.row-checkbox').prop('checked', this.checked);
-            });
+                })
+                .catch(error => console.error('Error fetching JSON data:', error));
         });
     </script>
 </body>
+
 </html>
