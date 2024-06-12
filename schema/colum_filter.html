@@ -51,7 +51,76 @@
                     </tr>
                 </thead>
                 <tbody id="table1-body">
-                    <!-- Rows will be populated via JavaScript -->
+                    <tr>
+                        <td><input type="checkbox" class="row-checkbox"></td>
+                        <td>1</td>
+                        <td>John Doe</td>
+                        <td>30</td>
+                        <td>john.doe@example.com</td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" class="row-checkbox"></td>
+                        <td>2</td>
+                        <td>Jane Smith</td>
+                        <td>25</td>
+                        <td>jane.smith@example.com</td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" class="row-checkbox"></td>
+                        <td>3</td>
+                        <td>Alice Johnson</td>
+                        <td>35</td>
+                        <td>alice.johnson@example.com</td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" class="row-checkbox"></td>
+                        <td>4</td>
+                        <td>Bob Brown</td>
+                        <td>28</td>
+                        <td>bob.brown@example.com</td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" class="row-checkbox"></td>
+                        <td>5</td>
+                        <td>Charlie Davis</td>
+                        <td>22</td>
+                        <td>charlie.davis@example.com</td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" class="row-checkbox"></td>
+                        <td>6</td>
+                        <td>David Evans</td>
+                        <td>40</td>
+                        <td>david.evans@example.com</td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" class="row-checkbox"></td>
+                        <td>7</td>
+                        <td>Ella Wilson</td>
+                        <td>27</td>
+                        <td>ella.wilson@example.com</td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" class="row-checkbox"></td>
+                        <td>8</td>
+                        <td>Frank Moore</td>
+                        <td>33</td>
+                        <td>frank.moore@example.com</td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" class="row-checkbox"></td>
+                        <td>9</td>
+                        <td>Grace Hall</td>
+                        <td>29</td>
+                        <td>grace.hall@example.com</td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" class="row-checkbox"></td>
+                        <td>10</td>
+                        <td>Henry Clark</td>
+                        <td>31</td>
+                        <td>henry.clark@example.com</td>
+                    </tr>
                 </tbody>
             </table>
             <button id="downloadExcel-table1" class="btn btn-success mt-3">Download Selected Rows</button>
@@ -85,7 +154,76 @@
                     </tr>
                 </thead>
                 <tbody id="table2-body">
-                    <!-- Rows will be populated via JavaScript -->
+                    <tr>
+                        <td><input type="checkbox" class="row-checkbox"></td>
+                        <td>1</td>
+                        <td>Liam White</td>
+                        <td>30</td>
+                        <td>liam.white@example.com</td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" class="row-checkbox"></td>
+                        <td>2</td>
+                        <td>Emma Thompson</td>
+                        <td>25</td>
+                        <td>emma.thompson@example.com</td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" class="row-checkbox"></td>
+                        <td>3</td>
+                        <td>Olivia Harris</td>
+                        <td>35</td>
+                        <td>olivia.harris@example.com</td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" class="row-checkbox"></td>
+                        <td>4</td>
+                        <td>Noah Martin</td>
+                        <td>28</td>
+                        <td>noah.martin@example.com</td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" class="row-checkbox"></td>
+                        <td>5</td>
+                        <td>Ava Lewis</td>
+                        <td>22</td>
+                        <td>ava.lewis@example.com</td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" class="row-checkbox"></td>
+                        <td>6</td>
+                        <td>Sophia Lee</td>
+                        <td>40</td>
+                        <td>sophia.lee@example.com</td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" class="row-checkbox"></td>
+                        <td>7</td>
+                        <td>Mason Walker</td>
+                        <td>27</td>
+                        <td>mason.walker@example.com</td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" class="row-checkbox"></td>
+                        <td>8</td>
+                        <td>Isabella King</td>
+                        <td>33</td>
+                        <td>isabella.king@example.com</td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" class="row-checkbox"></td>
+                        <td>9</td>
+                        <td>Mia Wright</td>
+                        <td>29</td>
+                        <td>mia.wright@example.com</td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" class="row-checkbox"></td>
+                        <td>10</td>
+                        <td>Ethan Scott</td>
+                        <td>31</td>
+                        <td>ethan.scott@example.com</td>
+                    </tr>
                 </tbody>
             </table>
             <button id="downloadExcel-table2" class="btn btn-success mt-3">Download Selected Rows</button>
@@ -102,107 +240,72 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
         $(document).ready(function() {
-            // Function to generate random data
-            function generateRandomData(numRows) {
-                const names = ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown", "Charlie Davis"];
-                const domains = ["example.com", "mail.com", "test.com", "demo.com", "sample.com"];
-                let data = [];
-
-                for (let i = 1; i <= numRows; i++) {
-                    let name = names[Math.floor(Math.random() * names.length)];
-                    let age = Math.floor(Math.random() * 60) + 18;
-                    let email = name.split(' ').join('.').toLowerCase() + '@' + domains[Math.floor(Math.random() * domains.length)];
-                    data.push({ id: i, name: name, age: age, email: email });
-                }
-
-                return data;
-            }
-
-            // Function to populate table
-            function populateTable(tableId, data) {
-                let tableBody = $(`#${tableId}-body`);
-                tableBody.empty();
-
-                data.forEach(row => {
-                    tableBody.append(`
-                        <tr>
-                            <td><input type="checkbox" class="row-checkbox"></td>
-                            <td>${row.id}</td>
-                            <td>${row.name}</td>
-                            <td>${row.age}</td>
-                            <td>${row.email}</td>
-                        </tr>
-                    `);
-                });
-            }
-
-            // Generate and populate tables with 1,000 rows
-            const data1 = generateRandomData(1000);
-            const data2 = generateRandomData(1000);
-            populateTable('table1', data1);
-            populateTable('table2', data2);
-
             // Initialize Bootstrap Tables
             $('#table1').bootstrapTable();
             $('#table2').bootstrapTable();
 
             // Filter table based on column input
-            function filterTable(tableId, data) {
+            function filterTable(tableId) {
                 var filters = {};
                 $(`#${tableId} .search-input`).each(function() {
                     filters[$(this).data('field')] = $(this).val().toLowerCase();
                 });
 
-                const filteredData = data.filter(row => {
-                    return Object.keys(filters).every(field => {
-                        if (!filters[field]) return true;
-                        return String(row[field]).toLowerCase().includes(filters[field]);
+                const rows = $(`#${tableId} tbody tr`);
+                rows.each(function() {
+                    const row = $(this);
+                    let show = true;
+                    Object.keys(filters).forEach(field => {
+                        const cell = row.find(`td:contains(${field})`).next();
+                        if (filters[field] && !cell.text().toLowerCase().includes(filters[field])) {
+                            show = false;
+                        }
                     });
+                    row.toggle(show);
                 });
-
-                populateTable(tableId, filteredData);
-                $(`#${tableId}`).bootstrapTable('load', filteredData);
             }
 
             // Attach filter event to each search input
             $('.search-input').on('keyup', function() {
                 const tableId = $(this).closest('table').attr('id');
-                if (tableId === 'table1') {
-                    filterTable(tableId, data1);
-                } else if (tableId === 'table2') {
-                    filterTable(tableId, data2);
-                }
+                filterTable(tableId);
             });
 
-            // Select all checkboxes
-            $('#select-all-table1').click(function() {
-                $('#table1 .row-checkbox').prop('checked', this.checked);
-            });
-            $('#select-all-table2').click(function() {
-                $('#table2 .row-checkbox').prop('checked', this.checked);
-            });
-
-            // Download selected rows as Excel
-            $('#downloadExcel-table1').click(function() {
-                const selectedRows = data1.filter((row, index) => {
-                    return $(`#table1 tbody tr`).eq(index).find('input.row-checkbox').is(':checked');
+            // Download selected rows as Excel file
+            function downloadExcel(tableId) {
+                const selectedRows = [];
+                $(`#${tableId} tbody input.row-checkbox:checked`).each(function() {
+                    const row = $(this).closest('tr');
+                    const rowData = {};
+                    row.find('td').each((i, cell) => {
+                        if (i > 0) { // skip checkbox cell
+                            rowData[$(`#${tableId} thead th`).eq(i).data('field')] = $(cell).text();
+                        }
+                    });
+                    selectedRows.push(rowData);
                 });
 
-                const worksheet = XLSX.utils.json_to_sheet(selectedRows);
-                const workbook = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
-                XLSX.writeFile(workbook, "selected_rows_table1.xlsx");
+                const ws = XLSX.utils.json_to_sheet(selectedRows);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+                XLSX.writeFile(wb, `${tableId}_data.xlsx`);
+            }
+
+            $('#downloadExcel-table1').on('click', function() {
+                downloadExcel('table1');
             });
 
-            $('#downloadExcel-table2').click(function() {
-                const selectedRows = data2.filter((row, index) => {
-                    return $(`#table2 tbody tr`).eq(index).find('input.row-checkbox').is(':checked');
-                });
+            $('#downloadExcel-table2').on('click', function() {
+                downloadExcel('table2');
+            });
 
-                const worksheet = XLSX.utils.json_to_sheet(selectedRows);
-                const workbook = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
-                XLSX.writeFile(workbook, "selected_rows_table2.xlsx");
+            // Select/deselect all checkboxes
+            $('#select-all-table1').on('change', function() {
+                $('#table1 tbody input.row-checkbox').prop('checked', this.checked);
+            });
+
+            $('#select-all-table2').on('change', function() {
+                $('#table2 tbody input.row-checkbox').prop('checked', this.checked);
             });
         });
     </script>
