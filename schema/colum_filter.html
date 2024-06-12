@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bootstrap Table with Column Search and Export</title>
+    <title>Bootstrap Tables with Column Search, Pagination, and Export</title>
     <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Table CSS -->
@@ -14,40 +14,82 @@
             padding: 0.5rem;
             box-sizing: border-box;
         }
+        .card {
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
     <div class="container mt-4">
-        <h2>Bootstrap Table with Column Search and Export</h2>
-        <table 
-            id="table"
-            data-toggle="table"
-            data-search="true"
-            data-show-columns="true"
-            data-pagination="true"
-            data-page-size="20"
-            class="table">
-            <thead>
-                <tr>
-                    <th><input type="checkbox" id="select-all"></th>
-                    <th data-field="id" data-sortable="true">ID</th>
-                    <th data-field="name" data-sortable="true">Name</th>
-                    <th data-field="age" data-sortable="true">Age</th>
-                    <th data-field="email" data-sortable="true">Email</th>
-                </tr>
-                <tr>
-                    <th></th>
-                    <th><input type="text" class="search-input" placeholder="Search ID" data-field="id"></th>
-                    <th><input type="text" class="search-input" placeholder="Search Name" data-field="name"></th>
-                    <th><input type="text" class="search-input" placeholder="Search Age" data-field="age"></th>
-                    <th><input type="text" class="search-input" placeholder="Search Email" data-field="email"></th>
-                </tr>
-            </thead>
-            <tbody id="table-body">
-                <!-- Rows will be populated via JavaScript -->
-            </tbody>
-        </table>
-        <button id="downloadExcel" class="btn btn-success mt-3">Download Selected Rows</button>
+        <h2>Bootstrap Tables with Column Search, Pagination, and Export</h2>
+        
+        <!-- First Table -->
+        <div class="mb-4">
+            <h3>Table 1</h3>
+            <table 
+                id="table1"
+                data-toggle="table"
+                data-search="true"
+                data-show-columns="true"
+                data-pagination="true"
+                data-page-size="20"
+                class="table">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="select-all-table1"></th>
+                        <th data-field="id" data-sortable="true">ID</th>
+                        <th data-field="name" data-sortable="true">Name</th>
+                        <th data-field="age" data-sortable="true">Age</th>
+                        <th data-field="email" data-sortable="true">Email</th>
+                    </tr>
+                    <tr>
+                        <th></th>
+                        <th><input type="text" class="search-input" placeholder="Search ID" data-field="id"></th>
+                        <th><input type="text" class="search-input" placeholder="Search Name" data-field="name"></th>
+                        <th><input type="text" class="search-input" placeholder="Search Age" data-field="age"></th>
+                        <th><input type="text" class="search-input" placeholder="Search Email" data-field="email"></th>
+                    </tr>
+                </thead>
+                <tbody id="table1-body">
+                    <!-- Rows will be populated via JavaScript -->
+                </tbody>
+            </table>
+            <button id="downloadExcel-table1" class="btn btn-success mt-3">Download Selected Rows</button>
+        </div>
+        
+        <!-- Second Table -->
+        <div class="mb-4">
+            <h3>Table 2</h3>
+            <table 
+                id="table2"
+                data-toggle="table"
+                data-search="true"
+                data-show-columns="true"
+                data-pagination="true"
+                data-page-size="20"
+                class="table">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="select-all-table2"></th>
+                        <th data-field="id" data-sortable="true">ID</th>
+                        <th data-field="name" data-sortable="true">Name</th>
+                        <th data-field="age" data-sortable="true">Age</th>
+                        <th data-field="email" data-sortable="true">Email</th>
+                    </tr>
+                    <tr>
+                        <th></th>
+                        <th><input type="text" class="search-input" placeholder="Search ID" data-field="id"></th>
+                        <th><input type="text" class="search-input" placeholder="Search Name" data-field="name"></th>
+                        <th><input type="text" class="search-input" placeholder="Search Age" data-field="age"></th>
+                        <th><input type="text" class="search-input" placeholder="Search Email" data-field="email"></th>
+                    </tr>
+                </thead>
+                <tbody id="table2-body">
+                    <!-- Rows will be populated via JavaScript -->
+                </tbody>
+            </table>
+            <button id="downloadExcel-table2" class="btn btn-success mt-3">Download Selected Rows</button>
+        </div>
     </div>
 
     <!-- jQuery -->
@@ -59,7 +101,7 @@
     <!-- SheetJS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        $(document).ready(function() {
             // Function to generate random data
             function generateRandomData(numRows) {
                 const names = ["John Doe", "Jane Smith", "Alice Johnson", "Bob Brown", "Charlie Davis"];
@@ -76,83 +118,91 @@
                 return data;
             }
 
-            // Populate table with random data
-            function populateTable(data) {
-                let tableBody = document.getElementById('table-body');
-                tableBody.innerHTML = '';
+            // Function to populate table
+            function populateTable(tableId, data) {
+                let tableBody = $(`#${tableId}-body`);
+                tableBody.empty();
 
                 data.forEach(row => {
-                    let tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td><input type="checkbox" class="row-checkbox"></td>
-                        <td data-field="id">${row.id}</td>
-                        <td data-field="name">${row.name}</td>
-                        <td data-field="age">${row.age}</td>
-                        <td data-field="email">${row.email}</td>
-                    `;
-                    tableBody.appendChild(tr);
+                    tableBody.append(`
+                        <tr>
+                            <td><input type="checkbox" class="row-checkbox"></td>
+                            <td>${row.id}</td>
+                            <td>${row.name}</td>
+                            <td>${row.age}</td>
+                            <td>${row.email}</td>
+                        </tr>
+                    `);
                 });
             }
 
-            // Generate and populate table with 1,000 rows
-            const data = generateRandomData(1000);
-            populateTable(data);
+            // Generate and populate tables with 1,000 rows
+            const data1 = generateRandomData(1000);
+            const data2 = generateRandomData(1000);
+            populateTable('table1', data1);
+            populateTable('table2', data2);
 
-            // Initialize Bootstrap Table
-            $('#table').bootstrapTable();
+            // Initialize Bootstrap Tables
+            $('#table1').bootstrapTable();
+            $('#table2').bootstrapTable();
 
             // Filter table based on column input
-            function filterTable() {
+            function filterTable(tableId, data) {
                 var filters = {};
-                document.querySelectorAll('.search-input').forEach(function(input) {
-                    filters[input.dataset.field] = input.value.toLowerCase();
+                $(`#${tableId} .search-input`).each(function() {
+                    filters[$(this).data('field')] = $(this).val().toLowerCase();
                 });
 
-                document.querySelectorAll('#table tbody tr').forEach(function(row) {
-                    var showRow = true;
-                    for (var field in filters) {
-                        if (filters[field]) {
-                            var cellText = row.querySelector('td[data-field="' + field + '"]').textContent.toLowerCase();
-                            if (cellText.indexOf(filters[field]) === -1) {
-                                showRow = false;
-                                break;
-                            }
-                        }
-                    }
-                    row.style.display = showRow ? '' : 'none';
-                });
-            }
-
-            // Attach filter event to each search input
-            document.querySelectorAll('.search-input').forEach(function(input) {
-                input.addEventListener('keyup', filterTable);
-            });
-
-            // Select all checkbox functionality
-            document.getElementById('select-all').addEventListener('change', function() {
-                var checkboxes = document.querySelectorAll('.row-checkbox');
-                checkboxes.forEach(function(checkbox) {
-                    checkbox.checked = document.getElementById('select-all').checked;
-                });
-            });
-
-            // Download selected rows to Excel
-            document.getElementById('downloadExcel').addEventListener('click', function() {
-                var selectedRows = [];
-                document.querySelectorAll('.row-checkbox:checked').forEach(function(checkbox) {
-                    var row = checkbox.closest('tr');
-                    selectedRows.push({
-                        id: row.querySelector('td[data-field="id"]').textContent,
-                        name: row.querySelector('td[data-field="name"]').textContent,
-                        age: row.querySelector('td[data-field="age"]').textContent,
-                        email: row.querySelector('td[data-field="email"]').textContent
+                const filteredData = data.filter(row => {
+                    return Object.keys(filters).every(field => {
+                        if (!filters[field]) return true;
+                        return String(row[field]).toLowerCase().includes(filters[field]);
                     });
                 });
 
-                var ws = XLSX.utils.json_to_sheet(selectedRows);
-                var wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
-                XLSX.writeFile(wb, "selected_rows.xlsx");
+                populateTable(tableId, filteredData);
+                $(`#${tableId}`).bootstrapTable('load', filteredData);
+            }
+
+            // Attach filter event to each search input
+            $('.search-input').on('keyup', function() {
+                const tableId = $(this).closest('table').attr('id');
+                if (tableId === 'table1') {
+                    filterTable(tableId, data1);
+                } else if (tableId === 'table2') {
+                    filterTable(tableId, data2);
+                }
+            });
+
+            // Select all checkboxes
+            $('#select-all-table1').click(function() {
+                $('#table1 .row-checkbox').prop('checked', this.checked);
+            });
+            $('#select-all-table2').click(function() {
+                $('#table2 .row-checkbox').prop('checked', this.checked);
+            });
+
+            // Download selected rows as Excel
+            $('#downloadExcel-table1').click(function() {
+                const selectedRows = data1.filter((row, index) => {
+                    return $(`#table1 tbody tr`).eq(index).find('input.row-checkbox').is(':checked');
+                });
+
+                const worksheet = XLSX.utils.json_to_sheet(selectedRows);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+                XLSX.writeFile(workbook, "selected_rows_table1.xlsx");
+            });
+
+            $('#downloadExcel-table2').click(function() {
+                const selectedRows = data2.filter((row, index) => {
+                    return $(`#table2 tbody tr`).eq(index).find('input.row-checkbox').is(':checked');
+                });
+
+                const worksheet = XLSX.utils.json_to_sheet(selectedRows);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+                XLSX.writeFile(workbook, "selected_rows_table2.xlsx");
             });
         });
     </script>
