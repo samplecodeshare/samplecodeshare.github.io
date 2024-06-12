@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AG Grid Example with Pivot, Action Icons, and Download</title>
+    <!-- AG Grid CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/styles/ag-grid.css">
+    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/styles/ag-theme-alpine.css">
+    <style>
+        .ag-theme-alpine {
+            height: 500px;
+            width: 100%;
+        }
+        .action-icons i {
+            cursor: pointer;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-4 mb-4">AG Grid Example with Pivot, Action Icons, and Download</h1>
+        <div class="mb-4">
+            <button id="downloadBtn" class="btn btn-primary">Download Data</button>
+            <button id="sortCheckedBtn" class="btn btn-secondary">Sort by Checked Items</button>
+            <button id="pivotBtn" class="btn btn-success">Pivot by Gender</button>
+            <button id="clearPivotBtn" class="btn btn-warning">Clear Pivot</button>
+        </div>
+        <div id="myGrid" class="ag-theme-alpine"></div>
+    </div>
+
+    <!-- AG Grid JavaScript -->
+    <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.noStyle.js"></script>
+    <script>
+        // Initialize the grid
+        document.addEventListener('DOMContentLoaded', () => {
+            // Sample data
+            const rowData = [
+                { id: 1, name: 'John Doe', age: 30, gender: 'Male' },
+                { id: 2, name: 'Jane Smith', age: 25, gender: 'Female' },
+                { id: 3, name: 'Kevin Brown', age: 35, gender: 'Male' },
+                { id: 4, name: 'Lucy White', age: 28, gender: 'Female' },
+                { id: 5, name: 'Peter Parker', age: 22, gender: 'Male' },
+                { id: 6, name: 'Tony Stark', age: 48, gender: 'Male' },
+                { id: 7, name: 'Bruce Wayne', age: 35, gender: 'Male' },
+                { id: 8, name: 'Diana Prince', age: 30, gender: 'Female' },
+                { id: 9, name: 'Clark Kent', age: 34, gender: 'Male' },
+                { id: 10, name: 'Barry Allen', age: 28, gender: 'Male' }
+            ];
+
+            // Column definitions
+            const columnDefs = [
+                { headerName: 'ID', field: 'id', checkboxSelection: true },
+                { headerName: 'Name', field: 'name' },
+                { headerName: 'Age', field: 'age' },
+                { headerName: 'Gender', field: 'gender', enableRowGroup: true, enablePivot: true },
+                {
+                    headerName: 'Actions',
+                    field: 'actions',
+                    cellRenderer: actionCellRenderer,
+                    cellRendererParams: {
+                        onViewClicked: onViewClicked,
+                        onEditClicked: onEditClicked
+                    }
+                }
+            ];
+
+            // Action cell renderer
+            function actionCellRenderer(params) {
+                const container = document.createElement('div');
+                container.classList.add('action-icons');
+
+                const viewIcon = document.createElement('i');
+                viewIcon.classList.add('fas', 'fa-eye');
+                viewIcon.title = 'View';
+                viewIcon.addEventListener('click', () => params.context.onViewClicked(params.data));
+
+                const editIcon = document.createElement('i');
+                editIcon.classList.add('fas', 'fa-edit');
+                editIcon.title = 'Edit';
+                editIcon.addEventListener('click', () => params.context.onEditClicked(params.data));
+
+                container.appendChild(viewIcon);
+                container.appendChild(editIcon);
+
+                return container;
+            }
+
+            // View button click handler
+            function onViewClicked(data) {
+                alert(`View details of ${data.name}`);
+            }
+
+            // Edit button click handler
+            function onEditClicked(data) {
+                alert(`Edit details of ${data.name}`);
+            }
+
+            // Grid options
+            const gridOptions = {
+                columnDefs: columnDefs,
+                rowData: rowData,
+                context: {
+                    onViewClicked: onViewClicked,
+                    onEditClicked: onEditClicked
+                },
+                pagination: true,
+                paginationPageSize: 10,
+                rowSelection: 'multiple',
+                onFirstDataRendered: (params) => {
+                    params.api.sizeColumnsToFit();
+                },
+                enableSorting: true,
+                enableFilter: true,
+                enableColResize: true,
+                pivotMode: false,
+                isExternalFilterPresent: function() {
+                    return true;
+                },
+                doesExternalFilterPass: function(node) {
+                    // Implement your custom filtering logic here if needed
+                    return true;
+                },
+            };
+
+            // Initialize ag-Grid
+            const gridDiv = document.querySelector('#myGrid');
+            new agGrid.Grid(gridDiv, gridOptions);
+
+            // Download button click event
+            document.getElementById('downloadBtn').addEventListener('click', () => {
+                const selectedNodes = gridOptions.api.getSelectedNodes();
+                if (selectedNodes.length > 0) {
+                    // Download selected rows
+                    gridOptions.api.exportDataAsCsv({
+                        onlySelected: true
+                    });
+                } else {
+                    // Download all rows
+                    gridOptions.api.exportDataAsCsv();
+                }
+            });
+
+            // Sort by Checked Items button click event
+            document.getElementById('sortCheckedBtn').addEventListener('click', () => {
+                gridOptions.api.setSortModel([
+                    { colId: 'id', sort: 'asc' }
+                ]);
+            });
+
+            // Pivot by Gender button click event
+            document.getElementById('pivotBtn').addEventListener('click', () => {
+                gridOptions.api.setPivotMode(true);
+                gridOptions.columnApi.setPivotColumns(['gender']);
+                gridOptions.columnApi.setValueColumns(['id']);
+            });
+
+            // Clear Pivot button click event
+            document.getElementById('clearPivotBtn').addEventListener('click', () => {
+                gridOptions.api.setPivotMode(false);
+                gridOptions.columnApi.setPivotColumns([]);
+                gridOptions.columnApi.setValueColumns([]);
+            });
+
+            // Add event listener for row click to toggle selection
+            gridOptions.api.addEventListener('rowClicked', (event) => {
+                if (!event.shiftKey) {
+                    event.node.setSelected(!event.node.isSelected());
+                } else {
+                    let lastSelected = null;
+                    gridOptions.api.forEachNode((node) => {
+                        if (node.isSelected()) {
+                            lastSelected = node;
+                        }
+                    });
+
+                    const start = Math.min(lastSelected.rowIndex, event.node.rowIndex);
+                    const end = Math.max(lastSelected.rowIndex, event.node.rowIndex);
+
+                    for (let i = start; i <= end; i++) {
+                        const rowNode = gridOptions.api.getDisplayedRowAtIndex(i);
+                        rowNode.setSelected(true);
+                    }
+                }
+            });
+        });
+    </script>
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</body>
+</html>
