@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AG Grid Example with Checkbox and Filter</title>
+    <!-- AG Grid CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/styles/ag-grid.css">
+    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/styles/ag-theme-alpine.css">
+    <style>
+        .ag-theme-alpine {
+            height: 500px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-4 mb-4">AG Grid Example with Checkbox and Filter</h1>
+        <div class="mb-4">
+            <button id="downloadBtn" class="btn btn-primary">Download Data</button>
+            <button id="sortCheckedBtn" class="btn btn-secondary">Sort by Checked Items</button>
+            <label for="filterChecked" class="ml-4">Show Only Checked Items</label>
+            <input type="checkbox" id="filterChecked" class="ml-2">
+            <button id="logCheckedBtn" class="btn btn-info ml-4">Log Checked Items</button>
+        </div>
+        <div id="myGrid" class="ag-theme-alpine"></div>
+    </div>
+
+    <!-- AG Grid JavaScript -->
+    <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.noStyle.js"></script>
+    <script>
+        // Initialize the grid
+        document.addEventListener('DOMContentLoaded', () => {
+            // Sample data
+            const rowData = [
+                { id: 1, name: 'John Doe', age: 30, gender: 'Male' },
+                { id: 2, name: 'Jane Smith', age: 25, gender: 'Female' },
+                { id: 3, name: 'Kevin Brown', age: 35, gender: 'Male' },
+                { id: 4, name: 'Lucy White', age: 28, gender: 'Female' },
+                { id: 5, name: 'Peter Parker', age: 22, gender: 'Male' },
+                { id: 6, name: 'Tony Stark', age: 48, gender: 'Male' },
+                { id: 7, name: 'Bruce Wayne', age: 35, gender: 'Male' },
+                { id: 8, name: 'Diana Prince', age: 30, gender: 'Female' },
+                { id: 9, name: 'Clark Kent', age: 34, gender: 'Male' },
+                { id: 10, name: 'Barry Allen', age: 28, gender: 'Male' }
+            ];
+
+            // Column definitions
+            const columnDefs = [
+                { headerName: 'ID', field: 'id', checkboxSelection: true },
+                { headerName: 'Name', field: 'name' },
+                { headerName: 'Age', field: 'age' },
+                { headerName: 'Gender', field: 'gender' }
+            ];
+
+            // Grid options
+            const gridOptions = {
+                columnDefs: columnDefs,
+                rowData: rowData,
+                rowSelection: 'multiple',
+                pagination: true,
+                paginationPageSize: 10,
+                onFirstDataRendered: (params) => {
+                    params.api.sizeColumnsToFit();
+                },
+                isExternalFilterPresent: () => {
+                    return document.getElementById('filterChecked').checked;
+                },
+                doesExternalFilterPass: (node) => {
+                    return node.isSelected();
+                },
+            };
+
+            // Initialize ag-Grid
+            const gridDiv = document.querySelector('#myGrid');
+            new agGrid.Grid(gridDiv, gridOptions);
+
+            // Download button click event
+            document.getElementById('downloadBtn').addEventListener('click', () => {
+                const selectedNodes = gridOptions.api.getSelectedNodes();
+                const selectedData = selectedNodes.length > 0 
+                    ? selectedNodes.map(node => node.data)
+                    : gridOptions.api.getModel().rowsToDisplay.map(node => node.data);
+
+                // Post selected data to the server
+                fetch('your-server-endpoint', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(selectedData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Success:', data);
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+            });
+
+            // Sort by Checked Items button click event
+            document.getElementById('sortCheckedBtn').addEventListener('click', () => {
+                gridOptions.api.setSortModel([{ colId: 'id', sort: 'asc' }]);
+                gridOptions.api.refreshCells();
+            });
+
+            // Filter checkbox change event
+            document.getElementById('filterChecked').addEventListener('change', () => {
+                gridOptions.api.onFilterChanged();
+            });
+
+            // Log Checked Items button click event
+            document.getElementById('logCheckedBtn').addEventListener('click', () => {
+                const selectedNodes = gridOptions.api.getSelectedNodes();
+                const selectedData = selectedNodes.map(node => node.data);
+                console.log(selectedData);
+            });
+        });
+    </script>
+</body>
+</html>
