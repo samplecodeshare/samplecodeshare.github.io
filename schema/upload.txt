@@ -1,0 +1,79 @@
+models.py
+
+from django.db import models
+
+class Document(models.Model):
+    name = models.CharField(max_length=100)
+    upload = models.FileField(upload_to='uploads/')
+
+    def __str__(self):
+        return self.name
+
+forms.py
+
+from django import forms
+from .models import Document
+
+class DocumentForm(forms.ModelForm):
+    class Meta:
+        model = Document
+        fields = ['name', 'upload']
+
+views.py
+
+from django.shortcuts import render, redirect
+from .forms import DocumentForm
+
+def upload_file(request):
+    if request.method == 'POST':
+        form = DocumentForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect('upload_file')  # Replace with your success URL
+    else:
+        form = DocumentForm()
+    return render(request, 'upload.html', {'form': form})
+
+from django.urls import path
+from .views import upload_file
+
+urlpatterns = [
+    path('upload/', upload_file, name='upload_file'),
+]
+
+upload.html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload File</title>
+</head>
+<body>
+    <h1>Upload File</h1>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Upload</button>
+    </form>
+</body>
+</html>
+
+settings.py
+
+import os
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+urls.py
+
+from django.conf import settings
+from django.conf.urls.static import static
+from django.urls import path, include
+
+urlpatterns = [
+    # ... your other url patterns
+    path('', include('your_app.urls')),  # Include your app's URLs
+]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
