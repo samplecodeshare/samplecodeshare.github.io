@@ -42,18 +42,32 @@
     </div>
 
     <!-- Bootstrap JS and dependencies -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
     <script>
-        document.getElementById('uploadButton').addEventListener('click', function() {
-            document.getElementById('fileInput').click();
+        $(document).ready(function() {
+            attachEventListeners();
         });
 
-        document.getElementById('fileInput').addEventListener('change', function() {
-            var file = document.getElementById('fileInput').files[0];
-            var fileId = document.getElementById('fileIdInput').value;
+        function attachEventListeners() {
+            $('#uploadButton').off('click').on('click', function() {
+                $('#fileInput').click();
+            });
+
+            $('#fileInput').off('change').on('change', function() {
+                handleFileUpload();
+            });
+
+            $('#confirmOverrideButton').off('click').on('click', function() {
+                handleFileOverride();
+            });
+        }
+
+        function handleFileUpload() {
+            var file = $('#fileInput')[0].files[0];
+            var fileId = $('#fileIdInput').val();
             if (file) {
                 var formData = new FormData();
                 formData.append('upload', file);
@@ -73,17 +87,18 @@
                         $('#overrideModal').modal('show');
                     } else {
                         showToast(data.message, data.success);
+                        resetFileInput();
                     }
                 }).catch(error => {
                     console.error('Error:', error);
                     showToast('File upload failed due to an unexpected error.', false);
                 });
             }
-        });
+        }
 
-        document.getElementById('confirmOverrideButton').addEventListener('click', function() {
-            var file = document.getElementById('fileInput').files[0];
-            var fileId = document.getElementById('fileIdInput').value;
+        function handleFileOverride() {
+            var file = $('#fileInput')[0].files[0];
+            var fileId = $('#fileIdInput').val();
             if (file) {
                 var formData = new FormData();
                 formData.append('upload', file);
@@ -101,12 +116,13 @@
                   .then(data => {
                     showToast(data.message, data.success);
                     $('#overrideModal').modal('hide');
+                    resetFileInput();
                 }).catch(error => {
                     console.error('Error:', error);
                     showToast('File override failed due to an unexpected error.', false);
                 });
             }
-        });
+        }
 
         // Function to get a cookie value
         function getCookie(name) {
@@ -127,12 +143,17 @@
 
         // Function to show toast notifications
         function showToast(message, success) {
-            var toastBody = document.getElementById('toastBody');
-            toastBody.innerText = message;
+            var toastBody = $('#toastBody');
+            toastBody.text(message);
 
-            var toastElement = document.getElementById('uploadToast');
-            $(toastElement).removeClass('bg-success bg-danger').addClass(success ? 'bg-success' : 'bg-danger');
-            $(toastElement).toast('show');
+            var toastElement = $('#uploadToast');
+            toastElement.removeClass('bg-success bg-danger').addClass(success ? 'bg-success' : 'bg-danger');
+            toastElement.toast('show');
+        }
+
+        // Function to reset file input
+        function resetFileInput() {
+            $('#fileInput').val('');
         }
     </script>
 </body>
