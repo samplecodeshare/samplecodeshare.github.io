@@ -1,6 +1,6 @@
 import json
-from jsonschema import validate, ValidationError, SchemaError
-from ruamel.yaml import YAML, ScalarString
+from jsonschema import Draft7Validator, ValidationError, SchemaError
+from ruamel.yaml import YAML
 
 def load_yaml(file_path):
     yaml = YAML()
@@ -33,17 +33,18 @@ def print_validation_error(error, yaml_content):
     line_number = get_line_number(yaml_content, path)
     print(f"Error: {error.message}")
     print(f"Location: {'.'.join(map(str, path))}")
-    print(f"Line number: {line_number}")
+    print(f"Line number: {line_number}\n")
 
 def validate_yaml_with_schema(yaml_data, schema):
-    try:
-        validate(instance=yaml_data, schema=schema)
+    validator = Draft7Validator(schema)
+    errors = list(validator.iter_errors(yaml_data))
+    
+    if errors:
+        print(f"Found {len(errors)} validation errors:\n")
+        for error in errors:
+            print_validation_error(error, yaml_data)
+    else:
         print("YAML data is valid against the schema.")
-    except ValidationError as ve:
-        print("YAML data is not valid.")
-        print_validation_error(ve, yaml_data)
-    except SchemaError as se:
-        print(f"Schema is not valid. Error: {se.message}")
 
 if __name__ == "__main__":
     yaml_file_path = 'data.yaml'
