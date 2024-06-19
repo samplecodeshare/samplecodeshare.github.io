@@ -1,0 +1,37 @@
+openapi: 3.0.3
+info:
+  title: Sample API
+  description: This is a sample OpenAPI schema with a Contract object referencing external schemas.
+  version: 1.0.0
+paths:
+  /contracts:
+    get:
+      summary: Get all contracts
+      operationId: getContracts
+      responses:
+        '200':
+          description: A list of contracts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Contract'
+components:
+  schemas:
+    Contract:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        domain:
+          $ref: 'external-schemas.yaml#/components/schemas/Domain'
+        system:
+          $ref: 'external-schemas.yaml#/components/schemas/System'
+        schemas:
+          type: array
+          items:
+            $ref: 'external-schemas.yaml#/components/schemas/Schema'
