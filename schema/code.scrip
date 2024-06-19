@@ -42,3 +42,9 @@ public class SpringBootOpenApiH2Application {
         SpringApplication.run(SpringBootOpenApiH2Application.class, args);
     }
 }
+
+<dependency>
+    <groupId>org.springdoc</groupId>
+    <artifactId>springdoc-openapi-ui</artifactId>
+    <version>1.6.4</version> <!-- Replace with the latest version -->
+</dependency>
