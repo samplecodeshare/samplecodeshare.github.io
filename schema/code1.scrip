@@ -126,3 +126,80 @@ public class ContractApiController implements ContractsApi {
   </build>
 
 </project>
+
+
+openapi: 3.0.3
+info:
+  title: Sample API
+  description: This is a sample OpenAPI schema with a Contract object referencing Domain, System, and Schema objects.
+  version: 1.0.0
+paths:
+  /contracts:
+    get:
+      summary: Get all contracts
+      operationId: getContracts
+      responses:
+        '200':
+          description: A list of contracts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Contract'
+components:
+  schemas:
+    Contract:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        domain:
+          $ref: '#/components/schemas/Domain'
+        system:
+          $ref: '#/components/schemas/System'
+        schemas:
+          type: array
+          items:
+            $ref: '#/components/schemas/Schema'
+    Domain:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+    System:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+    Schema:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        contract:
+          $ref: '#/components/schemas/Contract'
+        domain:
+          $ref: '#/components/schemas/Domain'
+        system:
+          $ref: '#/components/schemas/System'
+        properties:
+          type: object
+          additionalProperties:
+            type: string
