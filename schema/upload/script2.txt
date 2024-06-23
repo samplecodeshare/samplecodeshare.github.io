@@ -1,0 +1,138 @@
+import java.util.Map;
+
+public class DataContract {
+    private String dataContractSpecification;
+    private String id;
+    private Info info;
+    private Map<String, Map<String, Object>> servers;
+    private Terms terms;
+    private Map<String, Model> models;
+
+    // Getters and setters
+    public String getDataContractSpecification() {
+        return dataContractSpecification;
+    }
+
+    public void setDataContractSpecification(String dataContractSpecification) {
+        this.dataContractSpecification = dataContractSpecification;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public Info getInfo() {
+        return info;
+    }
+
+    public void setInfo(Info info) {
+        this.info = info;
+    }
+
+    public Map<String, Map<String, Object>> getServers() {
+        return servers;
+    }
+
+    public void setServers(Map<String, Map<String, Object>> servers) {
+        this.servers = servers;
+    }
+
+    public Terms getTerms() {
+        return terms;
+    }
+
+    public void setTerms(Terms terms) {
+        this.terms = terms;
+    }
+
+    public Map<String, Model> getModels() {
+        return models;
+    }
+
+    public void setModels(Map<String, Model> models) {
+        this.models = models;
+    }
+}
+
+
+public class Info {
+    private String title;
+    private String version;
+    private String description;
+    private String owner;
+    private Contact contact;
+
+    // Getters and setters
+    // Implement as needed
+}
+
+import java.util.Map;
+
+public class Model {
+    private String description;
+    private String type;
+    private Map<String, FieldDefinition> fields;
+
+    // Getters and setters
+    // Implement as needed
+}
+
+public class FieldDefinition {
+    private String $ref;
+    private Boolean required;
+    private Boolean unique;
+    private Boolean primary;
+    private String description;
+    private String type;
+    private String example;
+    private Integer minLength;
+    private Integer maxLength;
+
+    // Getters and setters
+    // Implement as needed
+}
+
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
+import java.io.File;
+import java.io.IOException;
+
+public class Main {
+    public static void main(String[] args) {
+        try {
+            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+            DataContract dataContract = mapper.readValue(new File("dataContract.yaml"), DataContract.class);
+
+            // Accessing specific fields
+            System.out.println("ID: " + dataContract.getId());
+            System.out.println("Title: " + dataContract.getInfo().getTitle());
+            System.out.println("Version: " + dataContract.getInfo().getVersion());
+
+            // Parsing models and fields
+            if (dataContract.getModels() != null) {
+                for (Map.Entry<String, Model> entry : dataContract.getModels().entrySet()) {
+                    System.out.println("Model: " + entry.getKey());
+                    Model model = entry.getValue();
+                    if (model.getFields() != null) {
+                        for (Map.Entry<String, FieldDefinition> fieldEntry : model.getFields().entrySet()) {
+                            System.out.println("Field: " + fieldEntry.getKey());
+                            FieldDefinition field = fieldEntry.getValue();
+                            System.out.println("  Type: " + field.getType());
+                            System.out.println("  Description: " + field.getDescription());
+                            // Add more attributes as needed
+                        }
+                    }
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
