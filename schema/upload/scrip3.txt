@@ -1,0 +1,107 @@
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.yaml.snakeyaml.Yaml;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/contracts")
+public class ContractController {
+
+    @PostMapping(value = "/uploadAndExtractDataContract", consumes = "multipart/form-data", produces = "application/json")
+    public ResponseEntity<String> uploadAndExtractDataContract(@RequestParam("file") MultipartFile file) {
+        try {
+            // Check if the uploaded file is not empty
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().body("Uploaded file is empty");
+            }
+
+            // Read YAML content from the uploaded file
+            InputStream inputStream = file.getInputStream();
+            Yaml yaml = new Yaml();
+            Map<String, Object> yamlData = yaml.load(inputStream);
+
+            // Extract dataContract object
+            DataContract dataContract = extractDataContract(yamlData);
+
+            // Process the extracted dataContract object as needed
+            System.out.println("Extracted dataContract:");
+            System.out.println(dataContract.getId());
+            System.out.println(dataContract.getInfo().getTitle());
+            System.out.println(dataContract.getInfo().getVersion());
+
+            // Extract fields definitions for all models
+            List<FieldDefinition> fieldDefinitions = extractFieldDefinitions(yamlData);
+
+            // Print extracted field definitions
+            System.out.println("Extracted field definitions:");
+            for (FieldDefinition field : fieldDefinitions) {
+                System.out.println(field.getModel() + " - " + field.getName() + " - " + field.getDescription());
+                // Add more fields as needed (type, required, example, etc.)
+            }
+
+            // Optionally, you can return the extracted dataContract object or field definitions as JSON response
+            // return ResponseEntity.ok(dataContract);
+            // return ResponseEntity.ok(fieldDefinitions);
+
+            return ResponseEntity.ok("dataContract extracted successfully");
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload and extract dataContract: " + e.getMessage());
+        }
+    }
+
+    // Method to extract dataContract object from YAML map
+    private DataContract extractDataContract(Map<String, Object> yamlData) {
+        DataContract dataContract = new DataContract();
+        dataContract.setId((String) yamlData.get("id"));
+
+        Map<String, Object> info = (Map<String, Object>) yamlData.get("info");
+        if (info != null) {
+            Info infoObj = new Info();
+            infoObj.setTitle((String) info.get("title"));
+            infoObj.setVersion((String) info.get("version"));
+            // Set other info properties as needed
+            dataContract.setInfo(infoObj);
+        }
+
+        // Optionally, extract other sections like servers, terms, models, etc.
+
+        return dataContract;
+    }
+
+    // Method to extract field definitions for all models from YAML map
+    private List<FieldDefinition> extractFieldDefinitions(Map<String, Object> yamlData) {
+        List<FieldDefinition> fieldDefinitions = new ArrayList<>();
+
+        Map<String, Object> models = (Map<String, Object>) yamlData.get("models");
+        if (models != null) {
+            for (Map.Entry<String, Object> modelEntry : models.entrySet()) {
+                String modelName = modelEntry.getKey();
+                Map<String, Object> modelDetails = (Map<String, Object>) modelEntry.getValue();
+                Map<String, Object> fields = (Map<String, Object>) modelDetails.get("fields");
+                if (fields != null) {
+                    for (Map.Entry<String, Object> fieldEntry : fields.entrySet()) {
+                        String fieldName = fieldEntry.getKey();
+                        Map<String, Object> fieldDetails = (Map<String, Object>) fieldEntry.getValue();
+
+                        FieldDefinition fieldDefinition = new FieldDefinition();
+                        fieldDefinition.setModel(modelName);
+                        fieldDefinition.setName(fieldName);
+                        fieldDefinition.setDescription((String) fieldDetails.get("description"));
+                        // Add more attributes as needed (type, required, example, etc.)
+
+                        fieldDefinitions.add(fieldDefinition);
+                    }
+                }
+            }
+        }
+
+        return fieldDefinitions;
+    }
+}
