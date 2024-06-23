@@ -1,0 +1,91 @@
+package com.example.demo.api;
+
+import com.example.demo.model.Contract;
+import com.example.demo.model.Domain;
+import com.example.demo.service.ContractService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.yaml.snakeyaml.Yaml;
+
+import java.io.InputStream;
+
+@RestController
+@RequestMapping("/contracts")
+public class ContractController {
+
+    @Autowired
+    private ContractService contractService;
+
+    @PostMapping(value = "/upload", consumes = "multipart/form-data", produces = "application/json")
+    public ResponseEntity<Contract> uploadContract(@RequestParam("file") MultipartFile file) {
+        try (InputStream inputStream = file.getInputStream()) {
+            Yaml yaml = new Yaml();
+            ContractYaml contractYaml = yaml.loadAs(inputStream, ContractYaml.class);
+            Contract createdContract = contractService.createContract(contractYaml.getName(), contractYaml.getDomain().getDomainName());
+            return ResponseEntity.status(201).body(createdContract);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);
+        }
+    }
+}
+
+class ContractYaml {
+    private String name;
+    private DomainYaml domain;
+
+    // Getters and Setters
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public DomainYaml getDomain() {
+        return domain;
+    }
+
+    public void setDomain(DomainYaml domain) {
+        this.domain = domain;
+    }
+}
+
+class DomainYaml {
+    private String domainName;
+
+    // Getters and Setters
+
+    public String getDomainName() {
+        return domainName;
+    }
+
+    public void setDomainName(String domainName) {
+        this.domainName = domainName;
+    }
+}
+====================================================================
+ /contracts/upload:
+    post:
+      summary: Upload a YAML file to create a contract
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+        required: true
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contract'
+==================================================================
