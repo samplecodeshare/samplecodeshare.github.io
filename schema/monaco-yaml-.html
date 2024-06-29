@@ -1,0 +1,147 @@
+<!-- https://github.com/neuroglia-io/monaco-yaml-prebuilt -->
+<!-- https://cdnjs.com/libraries/ajv -->
+<!-- https://github.com/datacontract/datacontract-specification/blob/main/datacontract.schema.json -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Monaco YAML prebuilt</title>
+</head>
+
+<body>
+    <div style="display: flex;">
+        <div id="yaml-editor-1" style="width: 95vw; height: 95vh;"></div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js" integrity="sha512-CSBhVREyzHAjAFfBlIBakjoRUKp5h7VSweP0InR/pAJyptH7peuhCsqAI/snV+TwZmXZqoUklpXp6R6wMnYf5Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="http://127.0.0.1:5500/datacatalog/catalogapp/templates/monaco-yaml-prebuilt-main/dist/monaco-editor.js"></script>
+    <!-- <script src="http://127.0.0.1:5500/datacatalog/catalogapp/templates/monaco-yaml-prebuilt-main/index.js"></script>     -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ajv/8.16.0/ajv7.min.js" ></script>
+    <script>
+        async function fetchSchema(uri) {
+            try {
+                const response = await fetch(uri);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch schema: ${response.status} ${response.statusText}`);
+                }
+                return await response.json();
+            } catch (error) {
+                console.error('Error fetching schema:', error);
+                return null;
+            }
+        }
+
+        function yamlToJson(yamlStr) {
+                // Use a library like js-yaml to convert YAML to JSON
+                return jsyaml.load(yamlStr);
+            }
+
+        // Function to fetch initial YAML template
+        async function fetchInitialTemplate(templateUri) {
+            try {
+                const response = await fetch(templateUri);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch initial template: ${response.status} ${response.statusText}`);
+                }
+                return await response.text();
+            } catch (error) {
+                console.error('Error fetching initial template:', error);
+                return null;
+            }
+        }
+
+        // Function to set schema and initial template dynamically
+        async function setDynamicSchemaAndTemplate() {
+            const dataContractSchemaUri = 'http://127.0.0.1:5500/datacatalog/catalogapp/templates/datacontract.json';
+            const initialTemplateUri = 'http://127.0.0.1:5500/datacatalog/catalogapp/templates/template.yaml';
+
+            const dataContractSchema = await fetchSchema(dataContractSchemaUri);
+            const initialTemplate = await fetchInitialTemplate(initialTemplateUri);
+
+            if (dataContractSchema && initialTemplate) {
+                const diagnosticsOptions = {
+                    enableSchemaRequest: true,
+                    hover: true,
+                    completion: true,
+                    validate: true,
+                    format: true,
+                    schemas: [
+                        {
+                            uri: dataContractSchemaUri,
+                            fileMatch: ['*'],
+                            schema: dataContractSchema,
+                        },
+                    ],
+                };
+
+                monacoYaml.setDiagnosticsOptions(diagnosticsOptions);
+
+                // Create Monaco Editor with initial template
+                const yamlModelUri = monaco.Uri.parse('a://b/initial-template.yaml');
+                const editor = monaco.editor.create(document.getElementById('yaml-editor-1'), {
+                    automaticLayout: true,
+                    theme: 'vs-dark',
+                    model: monaco.editor.createModel(initialTemplate, 'yaml', yamlModelUri),
+                });
+                editor.onDidChangeModelContent(validateYamlWithSchema);
+            } else {
+                console.error('Failed to fetch data contract schema or initial template.');
+            }
+        }
+
+        // Call the function to set dynamic schema and initial template
+        setDynamicSchemaAndTemplate();
+
+        function validateYamlWithSchema() {
+                try {
+                    // Convert YAML to JSON
+                    let yamlContent = document.getElementById('yaml-editor-1').textContent;
+                    let jsonSchema = ""
+                    const jsonData = yamlToJson(yamlContent);
+                    console.log(jsonData);
+
+                    // Validate JSON data against JSON Schema using Ajv
+                    const ajv = new Ajv(); // Create Ajv instance
+                    const validate = ajv.compile(jsonSchema); // Compile JSON Schema
+
+                    // Check if JSON data matches JSON Schema
+                    const isValid = validate(jsonData);
+
+                    if (!isValid) {
+                        // If validation fails, retrieve errors from Ajv
+                        return validate.errors.map(error => ({
+                            message: error.message,
+                            startLineNumber: error.dataPath ? (error.dataPath.match(/\//g) || []).length + 1 : 1,
+                            startColumn: 1,
+                            endLineNumber: error.dataPath ? (error.dataPath.match(/\//g) || []).length + 1 : 1,
+                            endColumn: 1
+                        }));
+                    }
+
+                    return []; // No errors
+                } catch (error) {
+                    console.error('Error validating YAML:', error);
+                    return [{ message: 'Error validating YAML', startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 1 }];
+                }
+            }
+
+            function setSchemaAndValidate() {
+                console.log("Schema is validating")
+                const validationOptions = {
+                    validate: true,
+                    lint: {
+                        getAnnotations: (model) => {                            
+                            const yamlContent = model.getValue();
+                            alert(yamlContent);
+                            console.log(yamlContent);
+                            return validateYamlWithSchema(yamlContent, jsonSchema);
+                        }
+                    }
+                };
+            }
+
+    </script>
+</body>
+
+</html>
