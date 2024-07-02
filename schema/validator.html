@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>YAML Validation using JSON Schema</title>
+    <script src="https://cdn.jsdelivr.net/npm/js-yaml@4/dist/js-yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ajv/8.11.0/ajv7.min.js"></script>
+</head>
+<body>
+    <h1>YAML Validation using JSON Schema</h1>
+    <textarea id="yaml-input" rows="10" cols="50">
+name: John Doe
+age: 30
+email: john.doe@example.com
+    </textarea>
+    <br>
+    <button onclick="validateYaml()">Validate YAML</button>
+    <pre id="result"></pre>
+
+    <script>
+        async function validateYaml() {
+            const yamlInput = document.getElementById('yaml-input').value;
+
+            let data;
+            try {
+                data = jsyaml.load(yamlInput);
+                console.log('YAML content parsed successfully');
+            } catch (e) {
+                document.getElementById('result').textContent = 'Error parsing YAML: ' + e.message;
+                return;
+            }
+
+            let schemaUrl = 'https://example.com/schema.json'; // Replace with your schema URL
+
+            try {
+                const response = await fetch(schemaUrl);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch schema');
+                }
+                const schema = await response.json();
+
+                const ajv = new window.ajv7();
+                ajv.addFormat("email", {
+                    type: "string",
+                    validate: function (email) {
+                        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+                    }
+                });
+
+                const validate = ajv.compile(schema);
+                const valid = validate(data);
+
+                if (valid) {
+                    document.getElementById('result').textContent = 'YAML data is valid';
+                } else {
+                    document.getElementById('result').textContent = 'YAML data is invalid: ' + JSON.stringify(validate.errors, null, 2);
+                }
+            } catch (error) {
+                document.getElementById('result').textContent = 'Error fetching or validating schema: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
