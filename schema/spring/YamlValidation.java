@@ -74,3 +74,25 @@ public class YamlValidation {
         return -1; // Not found
     }
 }
+
+
+// <dependencies>
+//     <!-- Everit JSON Schema Validator -->
+//     <dependency>
+//         <groupId>org.everit.json</groupId>
+//         <artifactId>org.everit.json.schema</artifactId>
+//         <version>1.14.2</version> <!-- Check for the latest version -->
+//     </dependency>
+//     <!-- SnakeYAML for YAML parsing -->
+//     <dependency>
+//         <groupId>org.yaml</groupId>
+//         <artifactId>snakeyaml</artifactId>
+//         <version>1.30</version> <!-- Check for the latest version -->
+//     </dependency>
+//     <!-- Jackson for JSON processing -->
+//     <dependency>
+//         <groupId>com.fasterxml.jackson.core</groupId>
+//         <artifactId>jackson-databind</artifactId>
+//         <version>2.12.3</version> <!-- Check for the latest version -->
+//     </dependency>
+// </dependencies>
