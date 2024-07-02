@@ -1,15 +1,34 @@
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.erosb.jsonsKema.JsonSchema;
-import com.github.erosb.jsonsKema.ValidationException;
-import com.github.erosb.jsonsKema.SchemaLoader;
+// <dependencies>
+//     <!-- SnakeYAML for YAML parsing -->
+//     <dependency>
+//         <groupId>org.yaml</groupId>
+//         <artifactId>snakeyaml</artifactId>
+//         <version>1.29</version>
+//     </dependency>
+//     <!-- JSON-P (javax.json) for JSON processing -->
+//     <dependency>
+//         <groupId>javax.json</groupId>
+//         <artifactId>javax.json-api</artifactId>
+//         <version>1.1.4</version>
+//     </dependency>
+//     <!-- Reference Implementation of JSON-P (needed for implementation classes) -->
+//     <dependency>
+//         <groupId>org.glassfish</groupId>
+//         <artifactId>javax.json</artifactId>
+//         <version>1.1.4</version>
+//     </dependency>
+// </dependencies>
+
 import org.yaml.snakeyaml.Yaml;
 
-import java.io.File;
-import java.io.FileInputStream;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.json.JsonStructure;
+import javax.json.JsonValidationException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 
 public class YamlSchemaValidator {
 
@@ -19,47 +38,39 @@ public class YamlSchemaValidator {
             String yamlFilePath = "path/to/your/file.yaml";
             String schemaFilePath = "path/to/your/schema.json";
 
-            // Load JSON Schema from file
-            JsonNode jsonSchema = loadJsonSchemaFromFile(schemaFilePath);
+            // Load JSON Schema
+            JsonObject jsonSchema = loadJsonSchemaFromFile(schemaFilePath);
 
-            // Load YAML content from file and convert to JSON
-            JsonNode yamlJson = convertYamlFileToJson(yamlFilePath);
+            // Load YAML content from file
+            Object yamlObject = loadYamlFromFile(yamlFilePath);
 
             // Validate YAML against JSON Schema
-            validateJsonSchema(jsonSchema, yamlJson);
+            validateJsonSchema(jsonSchema, yamlObject);
             System.out.println("YAML data is valid.");
-        } catch (Exception e) {
+        } catch (IOException | JsonValidationException e) {
             e.printStackTrace();
         }
     }
 
-    private static JsonNode loadJsonSchemaFromFile(String schemaFilePath) throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        try (InputStream inputStream = new FileInputStream(new File(schemaFilePath))) {
-            return objectMapper.readTree(inputStream);
+    private static JsonObject loadJsonSchemaFromFile(String schemaFilePath) throws IOException {
+        try (JsonReader reader = Json.createReader(new FileReader(schemaFilePath))) {
+            return reader.readObject();
         }
     }
 
-    private static JsonNode convertYamlFileToJson(String yamlFilePath) throws IOException {
+    private static Object loadYamlFromFile(String yamlFilePath) throws IOException {
         Yaml yaml = new Yaml();
-        try (InputStream inputStream = new FileInputStream(new File(yamlFilePath))) {
-            Object yamlObject = yaml.load(inputStream);
-            ObjectMapper objectMapper = new ObjectMapper();
-            return objectMapper.valueToTree(yamlObject);
+        try (InputStream inputStream = YamlSchemaValidator.class.getResourceAsStream(yamlFilePath)) {
+            return yaml.load(inputStream);
         }
     }
 
-    private static void validateJsonSchema(JsonNode jsonSchema, JsonNode yamlJson) {
-        SchemaLoader schemaLoader = new SchemaLoader();
-        JsonSchema schema = schemaLoader.load(jsonSchema);
-        try {
-            schema.validate(yamlJson);
-        } catch (ValidationException e) {
-            List<String> failures = e.getAllMessages();
-            System.out.println("YAML data is invalid:");
-            for (String failure : failures) {
-                System.out.println(failure);
-            }
+    private static void validateJsonSchema(JsonObject jsonSchema, Object yamlObject) throws JsonValidationException {
+        JsonStructure jsonStructure = Json.createValue(jsonSchema.toString());
+        JsonReader reader = Json.createReaderFactory(null).createReader(Json.createValue(yamlObject.toString()));
+        JsonStructure actualData = reader.read();
+        if (!jsonStructure.equals(actualData)) {
+            throw new JsonValidationException("Invalid JSON.");
         }
     }
 }
