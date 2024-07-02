@@ -2,8 +2,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.erosb.jsonsKema.JsonSchema;
 import com.github.erosb.jsonsKema.ValidationException;
-import com.github.erosb.jsonsKema.ValidationFailure;
-import com.github.erosb.jsonsKema.JsonLoader;
+import com.github.erosb.jsonsKema.SchemaLoader;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
@@ -51,13 +50,14 @@ public class YamlSchemaValidator {
     }
 
     private static void validateJsonSchema(JsonNode jsonSchema, JsonNode yamlJson) {
-        JsonSchema schema = JsonLoader.load(jsonSchema);
+        SchemaLoader schemaLoader = new SchemaLoader();
+        JsonSchema schema = schemaLoader.load(jsonSchema);
         try {
             schema.validate(yamlJson);
         } catch (ValidationException e) {
-            List<ValidationFailure> failures = e.getFailures();
+            List<String> failures = e.getAllMessages();
             System.out.println("YAML data is invalid:");
-            for (ValidationFailure failure : failures) {
+            for (String failure : failures) {
                 System.out.println(failure);
             }
         }
