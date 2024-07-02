@@ -1,98 +1,65 @@
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.fge.jsonschema.core.exceptions.ProcessingException;
-import com.github.fge.jsonschema.core.report.ProcessingMessage;
-import com.github.fge.jsonschema.core.report.ProcessingReport;
-import com.github.fge.jsonschema.main.JsonSchema;
-import com.github.fge.jsonschema.main.JsonSchemaFactory;
+import com.github.erosb.jsonsKema.JsonSchema;
+import com.github.erosb.jsonsKema.ValidationException;
+import com.github.erosb.jsonsKema.ValidationFailure;
+import com.github.erosb.jsonsKema.JsonLoader;
 import org.yaml.snakeyaml.Yaml;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 
-public class YamlValidation {
+public class YamlSchemaValidator {
 
-    public static void main(String[] args) throws IOException, ProcessingException {
-        // Example YAML content
-        String yamlContent = "name: John Doe\nage: 30\nemail: john.doe@example.com";
+    public static void main(String[] args) {
+        try {
+            // Paths to the YAML and JSON Schema files
+            String yamlFilePath = "path/to/your/file.yaml";
+            String schemaFilePath = "path/to/your/schema.json";
 
-        // Load YAML content into a JSON object
-        ObjectMapper objectMapper = new ObjectMapper();
-        Yaml yaml = new Yaml();
-        Object yamlObject = yaml.load(yamlContent);
-        JsonNode yamlJson = objectMapper.valueToTree(yamlObject);
+            // Load JSON Schema from file
+            JsonNode jsonSchema = loadJsonSchemaFromFile(schemaFilePath);
 
-        // Load JSON schema from URL (adjust URL accordingly)
-        String schemaUrl = "https://example.com/schema.json";
-        JsonNode schemaJson = loadJsonNodeFromUrl(schemaUrl);
+            // Load YAML content from file and convert to JSON
+            JsonNode yamlJson = convertYamlFileToJson(yamlFilePath);
 
-        // Validate YAML against JSON schema and print validation issues with line numbers
-        List<String> validationIssues = validateJsonSchema(schemaJson, yamlJson, yamlContent);
-        if (validationIssues.isEmpty()) {
-            System.out.println("YAML data is valid");
-        } else {
-            System.out.println("YAML data is invalid:");
-            for (String issue : validationIssues) {
-                System.out.println(issue);
-            }
+            // Validate YAML against JSON Schema
+            validateJsonSchema(jsonSchema, yamlJson);
+            System.out.println("YAML data is valid.");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
-    private static JsonNode loadJsonNodeFromUrl(String url) throws IOException {
+    private static JsonNode loadJsonSchemaFromFile(String schemaFilePath) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
-        try (InputStream inputStream = new URL(url).openStream()) {
+        try (InputStream inputStream = new FileInputStream(new File(schemaFilePath))) {
             return objectMapper.readTree(inputStream);
         }
     }
 
-    private static List<String> validateJsonSchema(JsonNode schemaJson, JsonNode yamlJson, String yamlContent) throws ProcessingException {
-        JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
-        JsonSchema schema = factory.getJsonSchema(schemaJson);
-
-        ProcessingReport report = schema.validate(yamlJson);
-
-        // Collect validation issues with line numbers
-        List<String> validationIssues = new ArrayList<>();
-        for (ProcessingMessage message : report) {
-            int lineNumber = getLineNumberFromPointer(message.asJson().get("instance").get("pointer").asText(), yamlContent);
-            validationIssues.add("Line " + lineNumber + ": " + message.getMessage());
+    private static JsonNode convertYamlFileToJson(String yamlFilePath) throws IOException {
+        Yaml yaml = new Yaml();
+        try (InputStream inputStream = new FileInputStream(new File(yamlFilePath))) {
+            Object yamlObject = yaml.load(inputStream);
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.valueToTree(yamlObject);
         }
-
-        return validationIssues;
     }
 
-    private static int getLineNumberFromPointer(String pointer, String yamlContent) {
-        String[] lines = yamlContent.split("\n");
-        for (int i = 0; i < lines.length; i++) {
-            if (pointer.contains("/" + i)) {
-                return i + 1; // Line numbers start from 1
+    private static void validateJsonSchema(JsonNode jsonSchema, JsonNode yamlJson) {
+        JsonSchema schema = JsonLoader.load(jsonSchema);
+        try {
+            schema.validate(yamlJson);
+        } catch (ValidationException e) {
+            List<ValidationFailure> failures = e.getFailures();
+            System.out.println("YAML data is invalid:");
+            for (ValidationFailure failure : failures) {
+                System.out.println(failure);
             }
         }
-        return -1; // Not found
     }
 }
-
-
-// <dependencies>
-//     <!-- Everit JSON Schema Validator -->
-//     <dependency>
-//         <groupId>org.everit.json</groupId>
-//         <artifactId>org.everit.json.schema</artifactId>
-//         <version>1.14.2</version> <!-- Check for the latest version -->
-//     </dependency>
-//     <!-- SnakeYAML for YAML parsing -->
-//     <dependency>
-//         <groupId>org.yaml</groupId>
-//         <artifactId>snakeyaml</artifactId>
-//         <version>1.30</version> <!-- Check for the latest version -->
-//     </dependency>
-//     <!-- Jackson for JSON processing -->
-//     <dependency>
-//         <groupId>com.fasterxml.jackson.core</groupId>
-//         <artifactId>jackson-databind</artifactId>
-//         <version>2.12.3</version> <!-- Check for the latest version -->
-//     </dependency>
-// </dependencies>
