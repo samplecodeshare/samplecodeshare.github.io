@@ -5,30 +5,40 @@
 //         <artifactId>snakeyaml</artifactId>
 //         <version>1.29</version>
 //     </dependency>
-//     <!-- JSON-P (javax.json) for JSON processing -->
+//     <!-- Networknt JSON Schema Validator -->
 //     <dependency>
-//         <groupId>javax.json</groupId>
-//         <artifactId>javax.json-api</artifactId>
-//         <version>1.1.4</version>
+//         <groupId>com.networknt</groupId>
+//         <artifactId>json-schema-validator</artifactId>
+//         <version>1.0.74</version>
 //     </dependency>
-//     <!-- Reference Implementation of JSON-P (needed for implementation classes) -->
+//     <!-- Jackson for JSON processing -->
 //     <dependency>
-//         <groupId>org.glassfish</groupId>
-//         <artifactId>javax.json</artifactId>
-//         <version>1.1.4</version>
+//         <groupId>com.fasterxml.jackson.core</groupId>
+//         <artifactId>jackson-databind</artifactId>
+//         <version>2.13.0</version>
 //     </dependency>
 // </dependencies>
 
-import org.yaml.snakeyaml.Yaml;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.json.JsonStructure;
-import javax.json.JsonValidationException;
-import java.io.FileReader;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.networknt.schema.JsonSchema;
+import com.networknt.schema.JsonSchemaFactory;
+import com.networknt.schema.SpecVersion;
+import com.networknt.schema.ValidationMessage;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.nodes.Node;
+import org.yaml.snakeyaml.representer.Representer;
+import org.yaml.snakeyaml.constructor.SafeConstructor;
+import org.yaml.snakeyaml.parser.ParserException;
+
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Set;
 
 public class YamlSchemaValidator {
 
@@ -38,39 +48,82 @@ public class YamlSchemaValidator {
             String yamlFilePath = "path/to/your/file.yaml";
             String schemaFilePath = "path/to/your/schema.json";
 
-            // Load JSON Schema
-            JsonObject jsonSchema = loadJsonSchemaFromFile(schemaFilePath);
+            // Load JSON Schema from file
+            JsonSchema jsonSchema = loadJsonSchemaFromFile(schemaFilePath);
 
-            // Load YAML content from file
-            Object yamlObject = loadYamlFromFile(yamlFilePath);
+            // Load YAML content from file and convert to JSON
+            JsonNode yamlJson = convertYamlFileToJson(yamlFilePath);
 
             // Validate YAML against JSON Schema
-            validateJsonSchema(jsonSchema, yamlObject);
+            validateJsonSchema(jsonSchema, yamlJson, yamlFilePath);
             System.out.println("YAML data is valid.");
-        } catch (IOException | JsonValidationException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private static JsonObject loadJsonSchemaFromFile(String schemaFilePath) throws IOException {
-        try (JsonReader reader = Json.createReader(new FileReader(schemaFilePath))) {
-            return reader.readObject();
+    private static JsonSchema loadJsonSchemaFromFile(String schemaFilePath) throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        try (InputStream inputStream = new FileInputStream(new File(schemaFilePath))) {
+            JsonNode schemaNode = objectMapper.readTree(inputStream);
+            JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V201909);
+            return factory.getSchema(schemaNode);
         }
     }
 
-    private static Object loadYamlFromFile(String yamlFilePath) throws IOException {
-        Yaml yaml = new Yaml();
-        try (InputStream inputStream = YamlSchemaValidator.class.getResourceAsStream(yamlFilePath)) {
-            return yaml.load(inputStream);
+    private static JsonNode convertYamlFileToJson(String yamlFilePath) throws IOException {
+        Yaml yaml = new Yaml(new SafeConstructor());
+        try (InputStream inputStream = new FileInputStream(new File(yamlFilePath))) {
+            Object yamlObject = yaml.load(inputStream);
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.valueToTree(yamlObject);
         }
     }
 
-    private static void validateJsonSchema(JsonObject jsonSchema, Object yamlObject) throws JsonValidationException {
-        JsonStructure jsonStructure = Json.createValue(jsonSchema.toString());
-        JsonReader reader = Json.createReaderFactory(null).createReader(Json.createValue(yamlObject.toString()));
-        JsonStructure actualData = reader.read();
-        if (!jsonStructure.equals(actualData)) {
-            throw new JsonValidationException("Invalid JSON.");
+    private static void validateJsonSchema(JsonSchema jsonSchema, JsonNode yamlJson, String yamlFilePath) throws IOException {
+        Set<ValidationMessage> validationMessages = jsonSchema.validate(yamlJson);
+        if (validationMessages.isEmpty()) {
+            System.out.println("YAML data is valid.");
+        } else {
+            System.out.println("YAML data is invalid:");
+            for (ValidationMessage message : validationMessages) {
+                System.out.println(message.getMessage());
+                System.out.println("Line number: " + findLineNumber(message.getPath(), yamlFilePath));
+            }
+        }
+    }
+
+    private static int findLineNumber(String path, String yamlFilePath) throws IOException {
+        Yaml yaml = new Yaml(new SafeConstructor(), new Representer(), new DumperOptions(), new CustomLoaderOptions(path));
+        try (InputStream inputStream = new FileInputStream(new File(yamlFilePath))) {
+            yaml.load(inputStream);
+            return yaml.getLoaderOptions().getLineNumber();
+        } catch (ParserException e) {
+            return -1; // If an error occurs, return -1 or handle it accordingly
+        }
+    }
+
+    // Custom loader options to track line numbers
+    static class CustomLoaderOptions extends SafeConstructor.LoaderOptions {
+        private final String path;
+        private int lineNumber = -1;
+
+        public CustomLoaderOptions(String path) {
+            this.path = path;
+        }
+
+        @Override
+        public void set(Node node) {
+            super.set(node);
+            if (node.getStartMark() != null && node.getEndMark() != null) {
+                if (path.equals(node.getValue())) {
+                    lineNumber = node.getStartMark().getLine() + 1; // YAML line numbers are 0-based
+                }
+            }
+        }
+
+        public int getLineNumber() {
+            return lineNumber;
         }
     }
 }
