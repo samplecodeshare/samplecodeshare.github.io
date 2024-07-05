@@ -18,96 +18,104 @@ public class PostGenProcessor {
         for (PathConfig pathConfig : config.getPaths()) {
             Path path = Paths.get(pathConfig.getPath());
             if (pathConfig.getType().equalsIgnoreCase("directory")) {
-                processDirectory(path, config.getAnnotations());
+                processDirectory(path, pathConfig.getModifications());
             } else if (pathConfig.getType().equalsIgnoreCase("file")) {
-                processFile(path, config.getAnnotations());
+                processFile(path, pathConfig.getModifications());
             }
         }
 
-        System.out.println("Annotations processed successfully.");
+        System.out.println("Modifications processed successfully.");
     }
 
-    private static void processDirectory(Path directoryPath, Annotations annotations) throws IOException {
+    private static void processDirectory(Path directoryPath, Modifications modifications) throws IOException {
         Files.walk(directoryPath)
              .filter(path -> path.toString().endsWith(".java"))
              .forEach(path -> {
                  try {
-                     processFile(path, annotations);
+                     processFile(path, modifications);
                  } catch (IOException e) {
                      e.printStackTrace();
                  }
              });
     }
 
-    private static void processFile(Path filePath, Annotations annotations) throws IOException {
-        addClassAnnotations(filePath, annotations.getAddClassAnnotations());
-        removeClassAnnotations(filePath, annotations.getRemoveClassAnnotations());
-        addFieldAnnotations(filePath, annotations.getAddFieldAnnotations());
-        removeFieldAnnotations(filePath, annotations.getRemoveFieldAnnotations());
-        removeToStringMethod(filePath);
+    private static void processFile(Path filePath, Modifications modifications) throws IOException {
+        addClassAnnotations(filePath, modifications.getAddClassAnnotations());
+        removeClassAnnotations(filePath, modifications.getRemoveClassAnnotations());
+        addFieldAnnotations(filePath, modifications.getAddFieldAnnotations());
+        removeFieldAnnotations(filePath, modifications.getRemoveFieldAnnotations());
+        if (modifications.isRemoveToString()) {
+            removeToStringMethod(filePath);
+        }
     }
 
     private static void addClassAnnotations(Path filePath, List<String> classAnnotations) throws IOException {
-        List<String> lines = Files.readAllLines(filePath);
-        List<String> modifiedLines = new ArrayList<>(classAnnotations);
-        modifiedLines.addAll(lines);
-        Files.write(filePath, modifiedLines);
+        if (classAnnotations != null && !classAnnotations.isEmpty()) {
+            List<String> lines = Files.readAllLines(filePath);
+            List<String> modifiedLines = new ArrayList<>(classAnnotations);
+            modifiedLines.addAll(lines);
+            Files.write(filePath, modifiedLines);
+        }
     }
 
     private static void removeClassAnnotations(Path filePath, List<String> classAnnotations) throws IOException {
-        List<String> lines = Files.readAllLines(filePath);
-        List<String> modifiedLines = new ArrayList<>();
+        if (classAnnotations != null && !classAnnotations.isEmpty()) {
+            List<String> lines = Files.readAllLines(filePath);
+            List<String> modifiedLines = new ArrayList<>();
 
-        for (String line : lines) {
-            if (!classAnnotations.contains(line.trim())) {
-                modifiedLines.add(line);
+            for (String line : lines) {
+                if (!classAnnotations.contains(line.trim())) {
+                    modifiedLines.add(line);
+                }
             }
-        }
 
-        Files.write(filePath, modifiedLines);
+            Files.write(filePath, modifiedLines);
+        }
     }
 
     private static void addFieldAnnotations(Path filePath, Map<String, List<String>> fieldAnnotations) throws IOException {
-        List<String> lines = Files.readAllLines(filePath);
-        List<String> modifiedLines = new ArrayList<>();
-        boolean fieldFound = false;
+        if (fieldAnnotations != null && !fieldAnnotations.isEmpty()) {
+            List<String> lines = Files.readAllLines(filePath);
+            List<String> modifiedLines = new ArrayList<>();
 
-        for (String line : lines) {
-            for (Map.Entry<String, List<String>> entry : fieldAnnotations.entrySet()) {
-                if (line.contains(entry.getKey())) {
-                    fieldFound = true;
-                    modifiedLines.addAll(entry.getValue());
+            for (String line : lines) {
+                boolean fieldFound = false;
+                for (Map.Entry<String, List<String>> entry : fieldAnnotations.entrySet()) {
+                    if (line.contains(entry.getKey())) {
+                        fieldFound = true;
+                        modifiedLines.addAll(entry.getValue());
+                    }
                 }
+                modifiedLines.add(line);
             }
-            modifiedLines.add(line);
-        }
 
-        Files.write(filePath, modifiedLines);
+            Files.write(filePath, modifiedLines);
+        }
     }
 
     private static void removeFieldAnnotations(Path filePath, Map<String, List<String>> fieldAnnotations) throws IOException {
-        List<String> lines = Files.readAllLines(filePath);
-        List<String> modifiedLines = new ArrayList<>();
-        boolean fieldFound = false;
+        if (fieldAnnotations != null && !fieldAnnotations.isEmpty()) {
+            List<String> lines = Files.readAllLines(filePath);
+            List<String> modifiedLines = new ArrayList<>();
 
-        for (String line : lines) {
-            boolean annotationRemoved = false;
-            for (Map.Entry<String, List<String>> entry : fieldAnnotations.entrySet()) {
-                if (line.contains(entry.getKey())) {
-                    fieldFound = true;
-                    for (String annotation : entry.getValue()) {
-                        if (line.contains(annotation)) {
-                            annotationRemoved = true;
+            for (String line : lines) {
+                boolean annotationRemoved = false;
+                for (Map.Entry<String, List<String>> entry : fieldAnnotations.entrySet()) {
+                    if (line.contains(entry.getKey())) {
+                        for (String annotation : entry.getValue()) {
+                            if (line.contains(annotation)) {
+                                annotationRemoved = true;
+                            }
                         }
                     }
                 }
+                if (!annotationRemoved) {
+                    modifiedLines.add(line);
+                }
             }
-            if (!annotationRemoved) {
-                modifiedLines.add(line);
-            }
-        }
 
-        Files.write(filePath, modifiedLines);
+            Files.write(filePath, modifiedLines);
+        }
     }
 
     private static void removeToStringMethod(Path filePath) throws IOException {
@@ -133,7 +141,6 @@ public class PostGenProcessor {
 
     private static class Config {
         private List<PathConfig> paths;
-        private Annotations annotations;
 
         public List<PathConfig> getPaths() {
             return paths;
@@ -142,19 +149,12 @@ public class PostGenProcessor {
         public void setPaths(List<PathConfig> paths) {
             this.paths = paths;
         }
-
-        public Annotations getAnnotations() {
-            return annotations;
-        }
-
-        public void setAnnotations(Annotations annotations) {
-            this.annotations = annotations;
-        }
     }
 
     private static class PathConfig {
         private String type;
         private String path;
+        private Modifications modifications;
 
         public String getType() {
             return type;
@@ -171,13 +171,22 @@ public class PostGenProcessor {
         public void setPath(String path) {
             this.path = path;
         }
+
+        public Modifications getModifications() {
+            return modifications;
+        }
+
+        public void setModifications(Modifications modifications) {
+            this.modifications = modifications;
+        }
     }
 
-    private static class Annotations {
+    private static class Modifications {
         private Map<String, List<String>> addFieldAnnotations;
         private Map<String, List<String>> removeFieldAnnotations;
         private List<String> addClassAnnotations;
         private List<String> removeClassAnnotations;
+        private boolean removeToString;
 
         public Map<String, List<String>> getAddFieldAnnotations() {
             return addFieldAnnotations;
@@ -210,30 +219,50 @@ public class PostGenProcessor {
         public void setRemoveClassAnnotations(List<String> removeClassAnnotations) {
             this.removeClassAnnotations = removeClassAnnotations;
         }
+
+        public boolean isRemoveToString() {
+            return removeToString;
+        }
+
+        public void setRemoveToString(boolean removeToString) {
+            this.removeToString = removeToString;
+        }
     }
 }
 
+/*
+paths:
+  - type: directory
+    path: src/main/java/com/example/generated
+    modifications:
+      addFieldAnnotations:
+        yourFieldName:
+          - "@YourFirstAnnotation"
+          - "@YourSecondAnnotation"
+      removeFieldAnnotations:
+        yourFieldName:
+          - "@RemoveThisAnnotation"
+      addClassAnnotations:
+        - "@YourClassAnnotation"
+      removeClassAnnotations:
+        - "@RemoveThisClassAnnotation"
+      removeToString: true
 
-
-// paths:
-//   - type: directory
-//     path: src/main/java/com/example/generated
-//   - type: file
-//     path: src/main/java/com/example/generated/SpecificFile.java
-
-// annotations:
-//   addFieldAnnotations:
-//     yourFieldName:
-//       - "@YourFirstAnnotation"
-//       - "@YourSecondAnnotation"
-//   removeFieldAnnotations:
-//     yourFieldName:
-//       - "@RemoveThisAnnotation"
-//   addClassAnnotations:
-//     - "@YourClassAnnotation"
-//   removeClassAnnotations:
-//     - "@RemoveThisClassAnnotation"
-
+  - type: file
+    path: src/main/java/com/example/generated/SpecificFile.java
+    modifications:
+      addFieldAnnotations:
+        anotherFieldName:
+          - "@AnotherFieldAnnotation"
+      removeFieldAnnotations:
+        anotherFieldName:
+          - "@RemoveAnotherFieldAnnotation"
+      addClassAnnotations:
+        - "@AnotherClassAnnotation"
+      removeClassAnnotations:
+        - "@RemoveAnotherClassAnnotation"
+      removeToString: true
+*/
 
 // <build>
 //     <plugins>
