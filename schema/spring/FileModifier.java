@@ -1,23 +1,40 @@
-import javax.tools.*;
-import java.io.IOException;
-import java.nio.file.*;
-import java.util.*;
-import java.util.stream.Collectors;
+import com.github.javaparser.*;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.FieldDeclaration;
+import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.expr.AnnotationExpr;
+import com.github.javaparser.ast.expr.MarkerAnnotationExpr;
+import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 
-import com.sun.source.tree.*;
-import com.sun.source.util.*;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
 
 public class FileModifier {
 
-    public static void main(String[] args) throws IOException {
-        if (args.length != 2) {
-            System.err.println("Usage: java MethodRemover <path-to-java-file> <method-name>");
+    public static void main(String[] args) {
+        if (args.length != 5) {
+            System.err.println("Usage: java PostGenProcessor <path-to-java-file> <method-name> <variable-name> <annotations-to-add> <annotations-to-remove>");
             System.exit(1);
         }
 
         String filePath = args[0];
         String methodName = args[1];
-        removeMethod(filePath, methodName);
+        String variableName = args[2];
+        List<String> annotationsToAdd = Arrays.asList(args[3].split(","));
+        List<String> annotationsToRemove = Arrays.asList(args[4].split(","));
+
+        try {
+            removeMethod(filePath, methodName);
+            addAnnotationsToVariable(filePath, variableName, annotationsToAdd);
+            removeAnnotationsFromClass(filePath, annotationsToRemove);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void removeMethod(String filePath, String methodName) throws IOException {
@@ -27,58 +44,81 @@ public class FileModifier {
             System.exit(1);
         }
 
-        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        if (compiler == null) {
-            System.err.println("System Java compiler not available");
+        // Parse the Java file
+        CompilationUnit cu = StaticJavaParser.parse(path);
+
+        // Create a visitor to find and remove the method
+        cu.accept(new VoidVisitorAdapter<Void>() {
+            @Override
+            public void visit(MethodDeclaration md, Void arg) {
+                if (md.getNameAsString().equals(methodName)) {
+                    System.out.println("Removing method: " + md.getNameAsString());
+                    md.remove();
+                }
+                super.visit(md, arg);
+            }
+        }, null);
+
+        // Write the updated content back to the file
+        Files.write(path, cu.toString().getBytes());
+        System.out.println("Method " + methodName + " removed successfully.");
+    }
+
+    public static void addAnnotationsToVariable(String filePath, String variableName, List<String> annotationNames) throws IOException {
+        Path path = Paths.get(filePath);
+        if (!Files.exists(path)) {
+            System.err.println("File not found: " + filePath);
             System.exit(1);
         }
 
-        StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
-        Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjects(path.toFile());
+        // Parse the Java file
+        CompilationUnit cu = StaticJavaParser.parse(path);
 
-        JavacTask task = (JavacTask) compiler.getTask(null, fileManager, null, null, null, compilationUnits);
-        Iterable<? extends CompilationUnitTree> asts = task.parse();
-
-        for (CompilationUnitTree ast : asts) {
-            new TreeScanner<Void, Void>() {
-                @Override
-                public Void visitMethod(MethodTree methodTree, Void aVoid) {
-                    if (methodTree.getName().toString().equals(methodName)) {
-                        long startLine = getLineNumber(ast, methodTree);
-                        long endLine = getEndLineNumber(ast, methodTree);
-
-                        try {
-                            List<String> lines = Files.readAllLines(path);
-                            List<String> updatedLines = new ArrayList<>();
-
-                            for (int i = 0; i < lines.size(); i++) {
-                                long lineNumber = i + 1;
-                                if (lineNumber < startLine || lineNumber > endLine) {
-                                    updatedLines.add(lines.get(i));
-                                }
-                            }
-
-                            Files.write(path, updatedLines);
-                            System.out.println("Method " + methodName + " removed successfully.");
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+        // Create a visitor to find the variable and add the annotations
+        cu.accept(new VoidVisitorAdapter<Void>() {
+            @Override
+            public void visit(FieldDeclaration fd, Void arg) {
+                fd.getVariables().forEach(variable -> {
+                    if (variable.getNameAsString().equals(variableName)) {
+                        System.out.println("Adding annotations to variable: " + variable.getNameAsString());
+                        annotationNames.forEach(annotationName -> {
+                            MarkerAnnotationExpr annotation = new MarkerAnnotationExpr(annotationName);
+                            fd.addAnnotation(annotation);
+                        });
                     }
-                    return super.visitMethod(methodTree, aVoid);
-                }
+                });
+                super.visit(fd, arg);
+            }
+        }, null);
 
-                private long getLineNumber(CompilationUnitTree ast, Tree tree) {
-                    LineMap lineMap = ast.getLineMap();
-                    return lineMap.getLineNumber(((JCTree) tree).getStartPosition());
-                }
+        // Write the updated content back to the file
+        Files.write(path, cu.toString().getBytes());
+        System.out.println("Annotations " + annotationNames + " added to variable " + variableName + " successfully.");
+    }
 
-                private long getEndLineNumber(CompilationUnitTree ast, Tree tree) {
-                    LineMap lineMap = ast.getLineMap();
-                    return lineMap.getLineNumber(((JCTree) tree).getEndPosition());
-                }
-            }.scan(ast, null);
+    public static void removeAnnotationsFromClass(String filePath, List<String> annotationNames) throws IOException {
+        Path path = Paths.get(filePath);
+        if (!Files.exists(path)) {
+            System.err.println("File not found: " + filePath);
+            System.exit(1);
         }
 
-        fileManager.close();
+        // Parse the Java file
+        CompilationUnit cu = StaticJavaParser.parse(path);
+
+        // Create a visitor to find the class and remove the annotations
+        cu.accept(new VoidVisitorAdapter<Void>() {
+            @Override
+            public void visit(ClassOrInterfaceDeclaration cid, Void arg) {
+                annotationNames.forEach(annotationName -> {
+                    cid.getAnnotations().removeIf(annotation -> annotation.getNameAsString().equals(annotationName));
+                });
+                super.visit(cid, arg);
+            }
+        }, null);
+
+        // Write the updated content back to the file
+        Files.write(path, cu.toString().getBytes());
+        System.out.println("Annotations " + annotationNames + " removed from class successfully.");
     }
 }
