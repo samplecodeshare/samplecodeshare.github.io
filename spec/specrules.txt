@@ -1,3 +1,5 @@
+npm install express @stoplight/spectral-core @stoplight/spectral-ruleset-finder @stoplight/spectral-functions
+------------------
 npm init -y
 --------------
 // compileRuleset.js
