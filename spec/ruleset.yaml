@@ -1,0 +1,59 @@
+extends: "spectral:oas"
+
+rules:
+  info-contact:
+    description: "OpenAPI object info should have contact information"
+    message: "Info object should contain contact object with name and email"
+    severity: error
+    given: "$.info"
+    then:
+      field: contact
+      function: truthy
+
+  info-contact-name:
+    description: "Contact object should have a name"
+    message: "Contact object should contain name"
+    severity: error
+    given: "$.info.contact"
+    then:
+      field: name
+      function: truthy
+
+  info-contact-email:
+    description: "Contact object should have an email"
+    message: "Contact object should contain email"
+    severity: error
+    given: "$.info.contact"
+    then:
+      field: email
+      function: truthy
+
+  operation-description:
+    description: "Operation objects should have a description"
+    message: "Operation object should contain a description"
+    severity: error
+    given: "$.paths[*][*]"
+    then:
+      field: description
+      function: truthy
+
+  operation-tag-defined:
+    description: "Operation tags should be defined in the global tags section"
+    message: "Operation tag should be defined in the global tags section"
+    severity: warn
+    given: "$.paths[*][*].tags"
+    then:
+      function: enumeration
+      functionOptions:
+        values: "$.tags[*].name"
+
+  no-eval-in-description:
+    description: "Descriptions should not contain 'eval()' as it's potentially dangerous"
+    message: "Descriptions should not contain 'eval()'"
+    severity: error
+    given: "$..description"
+    then:
+      function: pattern
+      functionOptions:
+        match: "eval\\(.*\\)"
+        notMatch: true
