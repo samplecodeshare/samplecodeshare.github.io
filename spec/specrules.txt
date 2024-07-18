@@ -1,0 +1,64 @@
+npm init -y
+--------------
+// compileRuleset.js
+const { readFileSync, writeFileSync } = require('fs');
+const { Spectral } = require('@stoplight/spectral-core');
+const { default: rulesetFinder } = require('@stoplight/spectral-ruleset-finder');
+
+async function compileRuleset(rulesetPath, outputPath) {
+    const ruleset = await rulesetFinder(rulesetPath);
+    const spectral = new Spectral();
+    await spectral.setRuleset(ruleset);
+
+    writeFileSync(outputPath, JSON.stringify(spectral.ruleset));
+}
+
+compileRuleset('.spectral.yaml', 'precompiled-ruleset.json')
+    .then(() => console.log('Ruleset compiled successfully'))
+    .catch(console.error);
+----------------
+node compileRuleset.js
+----------------
+// index.js
+const express = require('express');
+const bodyParser = require('body-parser');
+const { Spectral } = require('@stoplight/spectral-core');
+const { readFileSync } = require('fs');
+const { join } = require('path');
+
+const app = express();
+const port = 3000;
+
+// Middleware to parse JSON requests
+app.use(bodyParser.json());
+
+// Load the precompiled ruleset
+const ruleset = JSON.parse(readFileSync(join(__dirname, 'precompiled-ruleset.json'), 'utf8'));
+
+// Endpoint to validate YAML
+app.post('/validate-yaml', async (req, res) => {
+    const yamlContent = req.body.yaml;
+
+    if (!yamlContent) {
+        return res.status(400).send({ error: 'YAML content is required' });
+    }
+
+    const spectral = new Spectral();
+    await spectral.setRuleset(ruleset);
+
+    try {
+        const results = await spectral.run(yamlContent);
+        res.send(results);
+    } catch (error) {
+        res.status(500).send({ error: 'Error validating YAML', details: error.message });
+    }
+});
+
+app.listen(port, () => {
+    console.log(`Spectral validation service running at http://localhost:${port}`);
+});
+-----------------------
+node index.js
+-----------------
+
+
