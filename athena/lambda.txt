@@ -1,0 +1,29 @@
+import json
+
+def lambda_handler(event, context):
+    try:
+        json_data = json.loads(event['data'])
+        path = event['path'].strip().split('.')
+        for key in path:
+            if key.endswith(']'):
+                key, index = key[:-1].split('[')
+                json_data = json_data[key][int(index)]
+            else:
+                json_data = json_data[key]
+        return {'result': json.dumps(json_data)}
+    except Exception as e:
+        return {'error': str(e)}
+
+
+Go to the Athena Console and choose the Workgroup where you want to create the UDF.
+Create the UDF using the following SQL command:
+
+CREATE FUNCTION custom_json_extract(json_data VARCHAR, json_path VARCHAR)
+RETURNS VARCHAR
+LANGUAGE JAVA
+RUNTIME 'lambda'
+HANDLER 'arn:aws:lambda:YOUR_REGION:YOUR_ACCOUNT_ID:function:YOUR_LAMBDA_FUNCTION_NAME'
+INPUTS VARCHAR
+
+SELECT id, name, custom_json_extract(json_data, '$.contacts[0].type') AS first_contact_type
+FROM json_data;
