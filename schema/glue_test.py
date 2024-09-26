@@ -1,25 +1,25 @@
-import sys
-from awsglue.transforms import *
-from awsglue.utils import getResolvedOptions
 from pyspark.context import SparkContext
 from awsglue.context import GlueContext
 from awsglue.job import Job
 from awsglue.dynamicframe import DynamicFrame
 from pyspark.sql.types import StructType, StructField, IntegerType, StringType, BooleanType
+import boto3
 
-# Retrieve job arguments
-args = getResolvedOptions(sys.argv, ['JOB_NAME', 'SOURCE_S3_PATH', 'TARGET_S3_PATH'])
-
-# Initialize Glue context and job
+# Initialize Spark and Glue contexts
 sc = SparkContext()
 glueContext = GlueContext(sc)
 spark = glueContext.spark_session
 job = Job(glueContext)
-job.init(args['JOB_NAME'], args)
 
-# Define source and target S3 paths
-source_s3_path = args['SOURCE_S3_PATH']  # e.g., 's3://your-source-bucket/sample.json'
-target_s3_path = args['TARGET_S3_PATH']  # e.g., 's3://your-target-bucket/output/'
+# Hardcoded parameters
+job_name = "example_glue_job"  # Your Glue job name
+source_s3_path = "s3://your-source-bucket/sample.json"  # Replace with your source S3 path
+target_s3_path = "s3://your-target-bucket/output/"  # Replace with your target S3 path
+source_bucket = "your-source-bucket"  # Replace with your source bucket name
+source_key = "sample.json"  # Replace with the key of your JSON file
+
+# Initialize the job with the hardcoded job name
+job.init(job_name, {})
 
 # Define the schema for the JSON file
 schema = StructType([
@@ -30,38 +30,51 @@ schema = StructType([
     StructField("is_active", BooleanType(), True)
 ])
 
-# Read JSON files from the source S3 bucket with schema
-df = spark.read.schema(schema).json(source_s3_path)
+# Function to print the raw JSON file before loading into DataFrame
+def print_raw_json(bucket, key):
+    s3 = boto3.client('s3')
+    response = s3.get_object(Bucket=bucket, Key=key)
+    content = response['Body'].read().decode('utf-8')
+    print("Raw JSON content:")
+    print(content)
 
-# Convert the DataFrame to DynamicFrame
-dynamic_frame = DynamicFrame.fromDF(df, glueContext, "dynamic_frame")
+try:
+    # Print the raw JSON content from S3
+    print_raw_json(source_bucket, source_key)
 
-# Write the DynamicFrame as a Parquet file to the target S3 path
-glueContext.write_dynamic_frame.from_options(
-    frame=dynamic_frame,
-    connection_type="s3",
-    connection_options={"path": target_s3_path},
-    format="parquet"
-)
+    # Read JSON files from the source S3 bucket with the defined schema
+    print(f"Reading JSON files from: {source_s3_path}")
+    df = spark.read.schema(schema).json(source_s3_path)
+    
+    # Check if the DataFrame is empty
+    if df.rdd.isEmpty():
+        raise ValueError("The DataFrame is empty after reading the JSON file. Please check the source file and schema.")
+
+    # Print the schema of the DataFrame
+    print("Schema of the DataFrame:")
+    df.printSchema()  # This line prints the schema of the DataFrame
+
+    # Show the DataFrame to verify data before writing
+    print("Data read from JSON:")
+    df.show()
+
+    # Convert the DataFrame to DynamicFrame
+    dynamic_frame = DynamicFrame.fromDF(df, glueContext, "dynamic_frame")
+
+    # Write the DynamicFrame as a CSV file to the target S3 path
+    print(f"Writing CSV files to: {target_s3_path}")
+    glueContext.write_dynamic_frame.from_options(
+        frame=dynamic_frame,
+        connection_type="s3",
+        connection_options={"path": target_s3_path},
+        format="csv",
+        format_options={"separator": ",", "quoteChar": '"'}
+    )
+
+    print("CSV file written successfully.")
+
+except Exception as e:
+    print(f"An error occurred: {str(e)}")
 
 # Commit the job
 job.commit()
-
-
-
-# [
-#   {
-#     "id": 1,
-#     "name": "Alice",
-#     "age": 30,
-#     "email": "alice@example.com",
-#     "is_active": true
-#   },
-#   {
-#     "id": 2,
-#     "name": "Bob",
-#     "age": 25,
-#     "email": "bob@example.com",
-#     "is_active": false
-#   }
-# ]
