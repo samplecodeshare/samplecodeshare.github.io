@@ -5,11 +5,12 @@ import configparser
 from cryptography.fernet import Fernet
 import sys
 
-def fetch_and_write_to_csv(query, csv_file_path, db_config, chunk_size=10000):
+def fetch_and_write_to_csv(query, query_param, csv_file_path, db_config, chunk_size=10000):
     """
-    Executes a SQL query and streams the result row by row to a CSV file.
+    Executes a SQL query with a dynamic parameter and streams the result row by row to a CSV file.
 
     :param query: SQL query to execute.
+    :param query_param: Value to insert into the SQL query's WHERE condition.
     :param csv_file_path: File path to save the CSV.
     :param db_config: Dictionary containing database connection parameters.
     :param chunk_size: Number of rows to fetch per iteration (for cursor chunking).
@@ -19,8 +20,8 @@ def fetch_and_write_to_csv(query, csv_file_path, db_config, chunk_size=10000):
         connection = psycopg2.connect(**db_config)
         cursor = connection.cursor()
 
-        # Execute the query
-        cursor.execute(sql.SQL(query))
+        # Execute the query with the dynamic parameter
+        cursor.execute(query, (query_param,))
 
         # Open the CSV file to write the data
         with open(csv_file_path, mode='w', newline='', encoding='utf-8') as csv_file:
@@ -93,12 +94,13 @@ def get_db_config_and_query(config_file, section):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 3:
-        print("Usage: python script.py <config_file> <section_name>")
+    if len(sys.argv) != 4:
+        print("Usage: python script.py <config_file> <section_name> <query_param>")
         sys.exit(1)
 
     config_file = sys.argv[1]  # Path to the config file
     section_name = sys.argv[2]  # Section name to get the SQL query from
+    query_param = sys.argv[3]  # Value to insert into the WHERE condition
 
     # Get the DB config and query from the INI file
     db_config, query = get_db_config_and_query(config_file, section_name)
@@ -106,10 +108,8 @@ if __name__ == '__main__':
     # Path to the CSV file where data will be written
     csv_file_path = f'{section_name}_output.csv'
 
-    # Fetch data and write to CSV
-    fetch_and_write_to_csv(query, csv_file_path, db_config)
-
-
+    # Fetch data with the query parameter and write to CSV
+    fetch_and_write_to_csv(query, query_param, csv_file_path, db_config)
 
 
 # [global]
