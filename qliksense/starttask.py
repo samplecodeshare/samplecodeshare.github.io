@@ -1,72 +1,51 @@
 import requests
-import json
 
-# Qlik Sense QRS API Server Details
+# Qlik Sense Server details
 qrs_server = "https://your-qlik-sense-server"
-qrs_port = "4242"
 task_name = "your-task-name"
-
-# Certificates for authenticating the API call (client and key)
 certs = ('/path/to/client.pem', '/path/to/client_key.pem')
 root_cert = '/path/to/root.pem'
 
-# Headers for the request, including Qlik user details
+# Headers for the request, including XSRF token and other necessary headers
 headers = {
     'Content-Type': 'application/json',
-    'X-Qlik-User': 'UserDirectory=YOUR_DOMAIN;UserId=YOUR_USER'
+    'X-Qlik-User': 'UserDirectory=YOUR_DOMAIN;UserId=YOUR_USER',
+    'X-Qlik-XSRF-Token': 'your-xsrf-token'  # XSRF token to be included
 }
 
-# Function to find the Task ID by Task Name
-def get_task_id_by_name(task_name):
-    qrs_api_url = f"{qrs_server}:{qrs_port}/qrs/task/full"
+# Function to get XSRF token (Example: You can extract it from a login request or browser cookies)
+def get_xsrf_token():
+    # Example login URL for getting the XSRF token
+    login_url = f"{qrs_server}/login"
+    response = requests.get(login_url, cert=certs, verify=root_cert)
     
-    # Send GET request to retrieve all tasks
+    if response.status_code == 200:
+        # Extract the XSRF token from response cookies or headers
+        xsrf_token = response.cookies.get('XSRF-TOKEN')
+        return xsrf_token
+    else:
+        print(f"Failed to get XSRF token. Status code: {response.status_code}")
+        return None
+
+# Function to find the Task ID by Name
+def get_task_id_by_name(task_name, xsrf_token):
+    qrs_api_url = f"{qrs_server}/qrs/task/full"
+    
+    headers['X-Qlik-XSRF-Token'] = xsrf_token  # Include XSRF token in the header
+    
     response = requests.get(qrs_api_url, headers=headers, cert=certs, verify=root_cert)
     
     if response.status_code == 200:
         tasks = response.json()
-        
-        # Loop through tasks to find the task by name
         for task in tasks:
             if task['name'] == task_name:
-                return task['id']  # Return the task ID if the name matches
-    
-    return None  # Return None if the task is not found
+                return task['id']
+    return None
 
-# Function to start a task with parameters
-def start_task_with_params(task_id, input_params):
-    # QRS API URL for starting the task synchronously
-    qrs_api_url = f"{qrs_server}:{qrs_port}/qrs/task/{task_id}/start/synchronous"
-    
-    # Prepare the payload with custom parameters
-    payload = {
-        "params": input_params  # Custom parameters passed in the payload
-    }
-
-    # Send POST request to start the task
-    response = requests.post(qrs_api_url, json=payload, headers=headers, cert=certs, verify=root_cert)
-
-    # Check the response
-    if response.status_code == 200:
-        print(f"Task {task_id} started successfully.")
-    else:
-        print(f"Failed to start task {task_id}. Status code: {response.status_code}, Response: {response.text}")
-
-# Main code execution
-if __name__ == "__main__":
-    # Step 1: Get Task ID by Name
-    task_id = get_task_id_by_name(task_name)
-    
-    if task_id:
-        print(f"Found Task ID: {task_id}")
-        
-        # Step 2: Define input parameters to pass to the task
-        input_parameters = {
-            "CustomParameter1": "Value1",
-            "CustomParameter2": "Value2"
-        }
-        
-        # Step 3: Start the task and pass parameters
-        start_task_with_params(task_id, input_parameters)
-    else:
-        print(f"Task with name '{task_name}' not found.")
+# Example usage: Get the XSRF token and start the task
+xsrf_token = get_xsrf_token()
+if xsrf_token:
+    task_id = get_task_id_by_name(task_name, xsrf_token)
+    print(f"Task ID: {task_id}")
+else:
+    print("Failed to retrieve XSRF token.")
